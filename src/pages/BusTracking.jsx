@@ -351,24 +351,24 @@ const BusTracking = () => {
                 <div className="border-b border-gray-200 p-4">
                   <h2 className="text-lg font-semibold text-gray-900">Available Buses</h2>
                 </div>
-                <div className="divide-y divide-gray-200" style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <div className="divide-y divide-gray-200" style={{ maxHeight: '250px', overflowY: 'auto', overflowX: 'hidden' }}>
                   {filteredBuses.length > 0 ? (
                     filteredBuses.map((bus) => (
                       <div 
                         key={bus.id} 
-                        className="cursor-pointer p-4 transition-all hover:bg-gray-50 hover-lift"
+                        className="cursor-pointer p-3 transition-all hover:bg-gray-50 hover-lift"
                         onClick={() => handleBusSelect(bus)}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                              <Bus className="h-6 w-6" />
+                          <div className="flex items-center space-x-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                              <Bus className="h-5 w-5" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-900">{bus.routeNumber} - {bus.routeName}</h3>
-                              <p className="text-sm text-gray-500">{bus.currentLocation}</p>
+                              <h3 className="text-sm font-medium text-gray-900">{bus.routeNumber} - {bus.routeName}</h3>
+                              <p className="text-xs text-gray-500">{bus.currentLocation}</p>
                               {userLocation && bus.distanceFromUser && (
-                                <p className="text-xs text-primary-600 flex items-center mt-1">
+                                <p className="text-xs text-primary-600 flex items-center mt-0.5">
                                   <Navigation className="h-3 w-3 mr-1" />
                                   {bus.distanceFromUser.toFixed(1)} km away
                                 </p>
@@ -376,20 +376,20 @@ const BusTracking = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                               bus.status === 'On Time' 
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}>
                               {bus.status}
                             </span>
-                            <p className="mt-1 text-sm text-gray-500">{bus.estimatedArrival}</p>
+                            <p className="mt-0.5 text-xs text-gray-500">{bus.estimatedArrival}</p>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-3 text-center text-sm text-gray-500">
                       No buses found matching your search.
                     </div>
                   )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { Users, CreditCard, Wallet, DollarSign, ChevronLeft, Bus, MapPin, Clock } from 'lucide-react'
+import TimePickerModal from '../components/TimePickerModal'
 import busData from '../../buses.js'
 
 const TicketBooking = () => {
@@ -20,6 +21,7 @@ const TicketBooking = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [showPickupDropdown, setShowPickupDropdown] = useState(false)
   const [showDestinationDropdown, setShowDestinationDropdown] = useState(false)
+  const [showTimeModal, setShowTimeModal] = useState(false)
 
   // Get URL parameters
   const location = useLocation()
@@ -363,21 +365,27 @@ const TicketBooking = () => {
                 {selectedPickup && selectedDestination && (
                   <div className="mt-4">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Departure Time</label>
-                    <div className="flex items-center">
-                      <Clock className="h-5 w-5 text-gray-400 mr-2" />
-                      <select
-                        className="w-full pl-3 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:border-primary-500 focus:ring-primary-500 transition-colors"
-                        value={selectedTiming}
-                        onChange={(e) => setSelectedTiming(e.target.value)}
-                      >
-                        <option value="">Select departure time</option>
-                        {availableTimings.map((time) => (
-                          <option key={time} value={time}>
-                            {time}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTimeModal(true)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 bg-white hover:border-primary-500 transition-colors group"
+                    >
+                      <div className="flex items-center">
+                        <Clock className="h-5 w-5 text-gray-400 group-hover:text-primary-500 mr-2" />
+                        <span className={selectedTiming ? 'text-gray-900' : 'text-gray-500'}>
+                          {selectedTiming || 'Select departure time'}
+                        </span>
+                      </div>
+                      <ChevronLeft className="h-5 w-5 text-gray-400 group-hover:text-primary-500 rotate-[-90deg]" />
+                    </button>
+                    
+                    <TimePickerModal
+                      isOpen={showTimeModal}
+                      onClose={() => setShowTimeModal(false)}
+                      availableTimings={availableTimings}
+                      selectedTiming={selectedTiming}
+                      onSelect={setSelectedTiming}
+                    />
                   </div>
                 )}
               </div>

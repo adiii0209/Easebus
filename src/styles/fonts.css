@@ -1,0 +1,18 @@
+/* Define custom font variables */
+:root {
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Apply font to all text elements */
+body {
+  font-family: var(--font-primary);
+}
+
+/* Optimize font loading */
+@layer base {
+  html {
+    font-family: var(--font-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

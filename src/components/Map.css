@@ -1,0 +1,75 @@
+/* Leaflet map styles */
+@import 'leaflet/dist/leaflet.css';
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.bus-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: #6366f1;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.bus-marker.selected {
+  background-color: #4f46e5;
+  border-color: #c7d2fe;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+  z-index: 1000 !important;
+}
+
+.bus-icon-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bus-icon-container.selected {
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.7));
+  transform: scale(1.2);
+  z-index: 1000 !important;
+}
+
+.bus-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.bus-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 8px; /* Reduced from 10px to 8px */
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.user-marker {
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.user-radius {
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.1);
+}

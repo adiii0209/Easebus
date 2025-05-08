@@ -1,0 +1,22 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bus Body -->
+  <path d="M150 300 Q 150 250 200 250 L 600 250 Q 650 250 650 300 L 650 400 Q 650 450 600 450 L 200 450 Q 150 450 150 400 Z" fill="#4F46E5" stroke="#3730A3" stroke-width="8"/>
+  
+  <!-- Windows -->
+  <path d="M220 280 H 580 V 350 H 220 Z" fill="#C7D2FE" stroke="#3730A3" stroke-width="4"/>
+  <path d="M220 280 H 580" fill="none" stroke="#3730A3" stroke-width="8"/>
+  
+  <!-- Wheels -->
+  <circle cx="250" cy="450" r="40" fill="#1F2937" stroke="#111827" stroke-width="8"/>
+  <circle cx="550" cy="450" r="40" fill="#1F2937" stroke="#111827" stroke-width="8"/>
+  <circle cx="250" cy="450" r="15" fill="#D1D5DB"/>
+  <circle cx="550" cy="450" r="15" fill="#D1D5DB"/>
+  
+  <!-- Details -->
+  <rect x="160" y="320" width="30" height="10" fill="#FCD34D"/> <!-- Headlight -->
+  <rect x="610" y="320" width="30" height="10" fill="#EF4444"/> <!-- Taillight -->
+  <path d="M150 380 H 650" stroke="#3730A3" stroke-width="4" fill="none"/> <!-- Trim line -->
+  
+  <!-- Door -->
+  <path d="M300 300 V 430 H 350 V 300" fill="none" stroke="#3730A3" stroke-width="4"/>
+</svg>

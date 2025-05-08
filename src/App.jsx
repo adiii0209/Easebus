@@ -10,6 +10,7 @@ import PassengerDashboard from './pages/PassengerDashboard'
 import AuthPage from './pages/auth/AuthPage'
 import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
+import { LocationProvider } from './contexts/LocationContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminPanel from './pages/AdminPanel'
 import DriverDashboard from './pages/DriverDashboard'
@@ -17,7 +18,8 @@ import DriverDashboard from './pages/DriverDashboard'
 function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <LocationProvider>
+        <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/bus-tracking" element={<BusTracking />} />
@@ -35,7 +37,8 @@ function App() {
           <Route path="/driver" element={<DriverDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>
-      </Routes>
+        </Routes>
+      </LocationProvider>
     </AuthProvider>
   )
 }

@@ -14,6 +14,9 @@ import { LocationProvider } from './contexts/LocationContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminPanel from './pages/AdminPanel'
 import DriverDashboard from './pages/DriverDashboard'
+import AssignmentPage from './pages/AssignmentPage'
+import ManagementPage from './pages/ManagementPage'
+import FinanceManagement from './pages/FinanceManagement'
 
 function App() {
   return (
@@ -35,6 +38,9 @@ function App() {
           } />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/driver" element={<DriverDashboard />} />
+          <Route path="/assignment" element={<AssignmentPage />} />
+          <Route path="/management" element={<ManagementPage />} />
+          <Route path="/finance" element={<FinanceManagement />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         </Routes>

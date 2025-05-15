@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { DollarSign } from 'lucide-react' // Added for fare icon
+import { DollarSign } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { User, Calendar, Clock, MapPin, Users, ChevronRight, Settings, LogOut, Truck, RotateCw } from 'lucide-react'
 import busData from '../../buses.js';
-import busService from '../services/BusService'; // Added BusService import
+import busService from '../services/BusService';
 import driverimage from '../assets/driver.jpg'
+import './DriverDashboard.css'
 
 const DriverDashboard = () => {
   // Mock driver data
@@ -101,7 +102,7 @@ const DriverDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
+    <div className="driver-dashboard container mx-auto px-4 py-8 md:px-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Driver Dashboard</h1>
         <p className="mt-2 text-base text-gray-600">
@@ -112,12 +113,12 @@ const DriverDashboard = () => {
       <div className="grid gap-6 md:grid-cols-3">
         {/* Driver Profile Card */}
         <div className="md:col-span-1">
-          <div className="card p-6">
+          <div className="glass-card profile-card">
             <div className="flex flex-col items-center text-center">
               <img 
                 src={driver.profileImage} 
                 alt={`${driver.firstName} ${driver.lastName}`} 
-                className="h-24 w-24 rounded-full object-cover"
+                className="profile-image object-cover"
               />
               <h2 className="mt-4 text-lg font-semibold text-gray-900">{driver.firstName} {driver.lastName}</h2>
               <p className="text-base text-gray-600">{driver.email}</p>
@@ -125,29 +126,29 @@ const DriverDashboard = () => {
               <p className="text-sm text-gray-500">License: {driver.licenseNumber}</p>
             </div>
 
-            <div className="mt-6 divide-y divide-gray-200">
-              <Link to="/profile" className="flex items-center justify-between py-3 hover:text-primary-600">
+            <div className="mt-6 space-y-2">
+              <Link to="/profile" className="nav-link">
                 <div className="flex items-center">
                   <User className="mr-3 h-5 w-5 text-gray-400" />
                   <span>Edit Profile</span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>
-              <Link to="/schedule" className="flex items-center justify-between py-3 hover:text-primary-600">
+              <Link to="/schedule" className="nav-link">
                 <div className="flex items-center">
                   <Calendar className="mr-3 h-5 w-5 text-gray-400" />
                   <span>View Schedule</span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>
-              <Link to="/settings" className="flex items-center justify-between py-3 hover:text-primary-600">
+              <Link to="/settings" className="nav-link">
                 <div className="flex items-center">
                   <Settings className="mr-3 h-5 w-5 text-gray-400" />
                   <span>Settings</span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>
-              <Link to="/" className="flex items-center justify-between py-3 text-red-600 hover:text-red-700">
+              <Link to="/" className="nav-link text-red-600 hover:text-red-700">
                 <div className="flex items-center">
                   <LogOut className="mr-3 h-5 w-5" />
                   <span>Logout</span>
@@ -208,9 +209,9 @@ const DriverDashboard = () => {
                       <Users className="mr-1 h-4 w-4" />
                       <span>{activeRoute.passengers} passengers</span>
                     </div>
-                    <button 
-                      onClick={() => handleEndRoute(activeRoute)} // Pass activeRoute to handleEndRoute
-                      className="btn btn-primary mt-4"
+                    <button
+                      onClick={() => handleEndRoute(activeRoute)}
+                      className="action-button bg-red-600 hover:bg-red-500 mt-4"
                       disabled={isStartingRoute}
                     >
                       {isStartingRoute ? (
@@ -232,66 +233,86 @@ const DriverDashboard = () => {
             </div>
           )}
 
-          {/* Fare Input Modal */}
+          {/* Fare Input Modal with Glassmorphism */}
           {showFareModal && activeRoute && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="card w-full max-w-md p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Enter Fare Collected</h2>
-                <p className="text-sm text-gray-600 mb-1">Route: {routeToEnd?.routeNumber} - {routeToEnd?.routeName}</p>
-                <p className="text-sm text-gray-600 mb-4">Bus ID: {routeToEnd?.busId}</p>
-                
-                <div className="mb-4">
-                  <label htmlFor="fareAmount" className="block text-sm font-medium text-gray-700 mb-1">Fare Amount (₹)</label>
-                  <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span className="text-gray-400 font-medium">₹</span>
+            <div className="modal-overlay">
+              <div className="modal-backdrop backdrop-blur-sm bg-black/30" />
+              <div className="modal-content bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/30 opacity-80 rounded-lg" />
+                <div className="relative">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Enter Fare Collected</h2>
+                  <p className="text-sm text-gray-600 mb-1">Route: {routeToEnd?.routeNumber} - {routeToEnd?.routeName}</p>
+                  <p className="text-sm text-gray-600 mb-4">Bus ID: {routeToEnd?.busId}</p>
+                  
+                  <div className="mb-4">
+                    <label htmlFor="fareAmount" className="block text-sm font-medium text-gray-700 mb-1">Fare Amount (₹)</label>
+                    <div className="input-field-container">
+                      <input 
+                        type="number" 
+                        id="fareAmount" 
+                        name="fareAmount"
+                        value={currentFare}
+                        onChange={(e) => setCurrentFare(e.target.value)}
+                        className="input-field" 
+                        placeholder="e.g., 1500.00"
+                        min="0"
+                        step="0.01"
+                      />
                     </div>
-                    <input 
-                      type="number" 
-                      id="fareAmount" 
-                      name="fareAmount"
-                      value={currentFare}
-                      onChange={(e) => setCurrentFare(e.target.value)}
-                      className="input pl-10 w-full" 
-                      placeholder="e.g., 1500.00"
-                      min="0"
-                      step="0.01"
-                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button 
+                      onClick={() => {
+                        setShowFareModal(false);
+                        setCurrentFare('');
+                        setRouteToEnd(null);
+                      }}
+                      className="action-button bg-gray-500 hover:bg-gray-600"
+                      disabled={isStartingRoute}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={submitFareAndEndRoute}
+                      className="action-button"
+                      disabled={isStartingRoute || !currentFare}
+                    >
+                      {isStartingRoute ? (
+                        <>
+                          <RotateCw className="mr-2 h-4 w-4 animate-spin inline" />
+                          Submitting...
+                        </>
+                      ) : 'Submit Fare & End Route'}
+                    </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                <div className="flex justify-end space-x-3">
-                  <button 
-                    onClick={() => {
-                      setShowFareModal(false);
-                      setCurrentFare('');
-                      setRouteToEnd(null);
-                    }}
-                    className="btn btn-secondary"
-                    disabled={isStartingRoute}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={submitFareAndEndRoute}
-                    className="btn btn-primary"
-                    disabled={isStartingRoute || !currentFare}
-                  >
-                    {isStartingRoute ? (
-                      <>
-                        <RotateCw className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : 'Submit Fare & End Route'}
-                  </button>
+          {/* Success Confirmation Modal */}
+          {isStartingRoute && currentFare && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+              <div className="relative bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl p-6 max-w-sm w-full mx-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-50/60 to-emerald-50/30 opacity-80 rounded-2xl" />
+                <div className="relative">
+                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 p-2 flex items-center justify-center">
+                    <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="mb-2 text-lg font-medium text-gray-900 text-center">Fare Submitted Successfully!</h3>
+                  <p className="text-sm text-gray-600 text-center">₹{currentFare} has been recorded for route {routeToEnd?.routeNumber}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Assigned Routes */}
-          <div className="card">
-            <div className="border-b border-gray-200 p-4">
+          <div className="glass-card">
+            <div className="route-header">
               <h2 className="text-lg font-semibold text-gray-900">Assigned Routes</h2>
             </div>
             <div className="divide-y divide-gray-200">
@@ -382,9 +403,9 @@ const DriverDashboard = () => {
                           <span>{route.passengers} passengers</span>
                         </div>
                         {!activeRoute && (
-                          <button 
+                          <button
                             onClick={() => handleStartRoute(route)}
-                            className="btn btn-primary mt-4"
+                            className="action-button w-full mt-2"
                             disabled={isStartingRoute}
                           >
                             {isStartingRoute ? (
@@ -416,8 +437,8 @@ const DriverDashboard = () => {
           </div>
 
           {/* Completed Routes */}
-          <div className="card">
-            <div className="border-b border-gray-200 p-4">
+          <div className="glass-card">
+            <div className="route-header">
               <h2 className="text-lg font-semibold text-gray-900">Completed Routes</h2>
             </div>
             

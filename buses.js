@@ -59,6 +59,60 @@ const busData = [
         "route": "Haridevpur to Howrah Station",
         "stops": ["Haridevpur", "Tollygunge", "Karunamoyee", "Tollygunge Metro", "Tollygunge Phari", "Rashbehari Xing", "Hazra Xing", "Jadu Babu r Bajar", "Elgin Road", "Exide", "Maidan", "Park Street", "Raj Bhawan", "Dalhousie", "GPO", "Strand Road", "Howrah Station"],
         "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "S4D",
+        "route": "Parnashree to New Town Bus Stand",
+        "stops": ["Parnashree", "State Garage", "Taratala", "New Alipore", "Mahabirtala", "Tollygunge Phari", "Prince Anwar Shah Connector", "Lords More", "Jadavpur PS", "Sapuipara", "Kalikapur", "Ruby Crossing", "Fortis", "Uttar Panchannagram", "Science City", "Dhapa", "Mathpukur", "Chingrighata", "Building More", "Stadium Island", "GD", "Sushrut Eye Hospital", "Wipro", "College More", "Technopolis", "DLF1", "Newtown Bus Stand"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "E4",
+        "route": "Parnashree to Howrah Bus Stand (Executive)",
+        "stops": ["Parnashree", "Taratala Depot", "Majerhat", "Mominpore", "Khidirpur", "Hastings", "Fort William", "Mayo Road", "Curzon Park", "Dalhousie", "Burrabazar", "Howrah Bus Stand"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "AC4",
+        "route": "Parnashree to Howrah Bus Stand",
+        "stops": ["Parnashree", "Taratala Depot", "Majherhat", "Mominpur", "Alipur Zoo", "Exide Crossing", "Park Street", "Raj Bhawan", "Dalhousie", "GPO", "Strand Road", "Howrah Bus Stand"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "S5",
+        "route": "Garia 5no. Bus Stand to Howrah Station",
+        "stops": ["Garia 5no. Bus Stand", "Baishnabghata", "Ramgarh", "Baghajatin", "Sulekha", "Jadavpur 8B", "Jadavpur PS", "Jodhpur Park", "Dhakuria", "Golpark", "Southern Avenue", "Rabindra Sarobar Stadium", "Rashbehari", "Kalighat", "Hazra", "Bhowanipur", "Elgin Crossing", "Exide", "Rabindra Sadan", "Maidan", "Park Street", "Mayo Road", "Esplanade", "BBD Bag", "Burrabazar", "Howrah Station"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "S5/N",
+        "route": "Garia 5no. Bus Stand to Nabanna Bus Terminus",
+        "stops": ["Garia 5no. Bus Stand", "Baishnabghata", "Ramgarh", "Baghajatin", "Sulekha", "Jadavpur 8B", "Jadavpur PS", "Jodhpur Park", "Dhakuria", "Golpark", "Southern Avenue", "Rabindra Sarobar Stadium", "Rashbehari", "Kalighat", "Hazra", "Bhowanipur", "Elgin Crossing", "Exide", "Rabindra Sadan", "PTS", "Nabanna Bus Terminus"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "AC5",
+        "route": "Garia 5no. Bus Stand to Howrah Station",
+        "stops": ["Garia 5no. Bus Stand", "Baishnabghata", "Ramgarh", "Baghajatin", "Sulekha", "Jadavpur 8B", "Jadavpur PS", "Jodhpur Park", "Dhakuria", "Golpark", "Gariahat", "Deshoprio Park", "Rashbehari", "Kalighat", "Hazra", "Bhowanipur", "Elgin Crossing", "Exide", "Rabindra Sadan", "Maidan", "Park Street", "Mayo Road", "Esplanade", "BBD Bag", "Burrabazar", "Howrah Station"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "7A",
+        "route": "Sarsuna Bus Terminus to Howrah Station",
+        "stops": ["Sarsuna Bus Terminus", "Bakultala", "Behala Chowrasta", "Manton", "Behala 14 Number", "Taratala", "Majherhat", "Mominpur", "Ekbalpur", "Khiderpur", "Hastings", "Fort William", "Esplanade", "Dalhousie", "GPO", "Shipping Corporation", "Burrabazar", "Howrah Station"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "S7",
+        "route": "Garia 6no. Bus Stand to Howrah Station",
+        "stops": ["Garia 6no. Bus Stand", "Naktala", "Bansdroni", "Netaji Nagar", "Ranikuthi", "Malancha", "Tollygunge Metro", "Tollygunge Phari", "Rashbehari Xing", "Hazra Xing", "Jadu Babu r Bajar", "Elgin Road", "Exide", "Maidan", "Park Street", "Raj Bhawan", "Dalhousie", "GPO", "Burrabazar", "Howrah Station"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
+    },
+    {
+        "busId": "S22",
+        "route": "Shakuntala Park to Karunamoyee",
+        "stops": ["Shakuntala Park", "Behala", "Tollygunge", "Rashbehari", "Esplanade", "Karunamoyee"],
+        "timings": ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"]
     }
 ];
 

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MapPin, Clock, Bus, Route, Ticket, Navigation, ArrowLeft, Bell } from 'lucide-react'
+import { MapPin, Clock, Bus, Route, Ticket, Navigation, ArrowLeft, Bell, Star, AlertTriangle } from 'lucide-react'
 import busService from '../services/BusService'
 import BusMap from '../components/BusMap'
+import SOSConfirmationModal from '../components/SOSConfirmationModal'
 
 const BusDetails = () => {
   const { busId } = useParams()
@@ -10,6 +11,8 @@ const BusDetails = () => {
   const [userLocation, setUserLocation] = useState(null)
   const [alertSet, setAlertSet] = useState(false)
   const [alertMessage, setAlertMessage] = useState('')
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [showSOSModal, setShowSOSModal] = useState(false)
 
   useEffect(() => {
     // Get the complete bus data from the service
@@ -121,8 +124,33 @@ const BusDetails = () => {
         {/* Bus Details */}
         <div className="flex-1 overflow-y-auto">
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">  
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <button
+                  onClick={() => setShowSOSModal(true)}
+                  className="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-xs w-full sm:w-auto whitespace-nowrap flex items-center justify-center transition-colors"
+                >
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  SOS Emergency
+                </button>
+                
+                <SOSConfirmationModal
+                  isOpen={showSOSModal}
+                  onClose={() => setShowSOSModal(false)}
+                  onConfirm={() => {
+                    // In a real app, this would trigger an emergency response system
+                    setShowSOSModal(false)
+                    setAlertMessage('SOS signal sent! Emergency services have been notified.')
+                    setTimeout(() => setAlertMessage(''), 5000) // Clear message after 5 seconds
+                  }}
+                />
+                <button
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={`btn ${isFavorite ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'} px-4 py-2 text-xs w-full sm:w-auto whitespace-nowrap flex items-center justify-center transition-all hover:bg-yellow-50`}
+                >
+                  <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-yellow-400' : ''} transition-transform ${isFavorite ? 'scale-110' : 'scale-100'}`} />
+                  {isFavorite ? 'Favorited' : 'Add to Favorites'}
+                </button>
                 <button 
                   onClick={() => {
                     if (!alertSet) {

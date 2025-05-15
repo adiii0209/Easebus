@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { User, Bus, MapPin, Calendar, Users, ChevronRight, Settings, LogOut, Plus, Edit, Trash2, Search, Clock, DollarSign, BarChart2, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User, Bus, MapPin, Calendar, Users, ChevronRight, Settings, LogOut, Plus, Edit, Trash2, Search, Clock, DollarSign, BarChart2, X, Clipboard, UserCheck, Route } from 'lucide-react'
 import busData from '../../buses.js'
 import adminProfileImage from '../assets/Easee.jpg'
 import busService from '../services/BusService' // Import BusService for revenue data
 
 const AdminPanel = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBus, setSelectedBus] = useState(null)
   const [showRevenueModal, setShowRevenueModal] = useState(false)
+  const [showDailyTasksModal, setShowDailyTasksModal] = useState(false)
   const [revenueByDate, setRevenueByDate] = useState([])
 
   // Admin data for Kolkata transport system
@@ -224,14 +226,14 @@ const AdminPanel = () => {
 
   // Render stat card
   const StatCard = ({ title, value, icon, className }) => (
-    <div className={`card p-4 ${className || ''}`}>
+    <div className={`backdrop-blur-md bg-white/30 border border-white/40 shadow-xl rounded-2xl p-4 transition-all duration-300 hover:shadow-2xl hover:bg-white/40 ${className || ''}`}>
       <div className="flex items-center">
-        <div className={`mr-4 rounded-full p-3 ${title === 'Today\'s Revenue' ? 'bg-green-100 text-green-600' : 'bg-primary-100 text-primary-600'}`}>
+        <div className={`mr-4 rounded-xl p-3 backdrop-blur-sm ${title === 'Today\'s Revenue' ? 'bg-green-100/80 text-green-600' : title === 'Monthly Revenue' ? 'bg-amber-100/80 text-amber-600' : 'bg-primary-100/80 text-primary-600'} transition-colors`}>
           {icon}
         </div>
         <div>
-          <p className={`text-sm font-medium ${title === 'Today\'s Revenue' ? 'text-green-600' : 'text-gray-500'}`}>{title}</p>
-          <h3 className={`text-2xl font-bold ${title === 'Today\'s Revenue' ? 'text-green-800' : 'text-gray-900'}`}>{value}</h3>
+          <p className={`text-sm font-medium ${title === 'Today\'s Revenue' ? 'text-green-600' : title === 'Monthly Revenue' ? 'text-amber-600' : 'text-gray-600'}`}>{title}</p>
+          <h3 className={`text-2xl font-bold ${title === 'Today\'s Revenue' ? 'text-green-800' : title === 'Monthly Revenue' ? 'text-amber-800' : 'text-gray-800'}`}>{value}</h3>
         </div>
       </div>
     </div>
@@ -239,32 +241,135 @@ const AdminPanel = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Kolkata Transport Admin</h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Manage Kolkata's public transport system, routes, and view statistics
-        </p>
+      {/* Daily Tasks Modal */}
+      {showDailyTasksModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500/30 backdrop-blur-sm"></div>
+            </div>
+            <div className="inline-block transform overflow-hidden rounded-2xl bg-white/80 backdrop-blur-md border border-white/20 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
+              <div className="bg-gradient-to-br from-white/60 to-white/30 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 w-full text-center sm:mt-0 sm:text-left">
+                    <h3 className="text-xl font-semibold leading-6 text-gray-900">Daily Tasks</h3>
+                    <div className="mt-6 space-y-4">
+                      <button 
+                        onClick={() => {
+                          setShowDailyTasksModal(false);
+                          navigate('/assignment');
+                        }} 
+                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group"
+                      >
+                        <div className="flex items-center">
+                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
+                            <UserCheck className="h-5 w-5 text-primary-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Assign Driver & Conductor</p>
+                            <p className="text-sm text-gray-500">Randomly or manually assign staff to buses</p>
+                          </div>
+                        </div>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowDailyTasksModal(false);
+                          navigate('/management');
+                        }}
+                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group"
+                      >
+                        <div className="flex items-center">
+                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
+                            <Route className="h-5 w-5 text-primary-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Manage Buses & Routes</p>
+                            <p className="text-sm text-gray-500">Update bus assignments and route schedules</p>
+                          </div>
+                        </div>
+                      </button>
+                      <button className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group">
+                        <div className="flex items-center">
+                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
+                            <Clock className="h-5 w-5 text-primary-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Schedule Maintenance</p>
+                            <p className="text-sm text-gray-500">Plan and track bus maintenance tasks</p>
+                          </div>
+                        </div>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowDailyTasksModal(false);
+                          navigate('/finance');
+                        }}
+                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group">
+                        <div className="flex items-center">
+                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
+                            <DollarSign className="h-5 w-5 text-primary-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Finance Management</p>
+                            <p className="text-sm text-gray-500">Track payments, revenues, and expenses</p>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/50 backdrop-blur-sm px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  className="mt-3 inline-flex w-full justify-center rounded-xl border border-white/40 bg-white/50 px-4 py-2 text-base font-medium text-gray-700 shadow-sm transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={() => setShowDailyTasksModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Kolkata Transport Admin</h1>
+          <p className="mt-2 text-lg text-gray-600">
+            Manage Kolkata's public transport system, routes, and view statistics
+          </p>
+        </div>
+        <button
+          onClick={() => setShowDailyTasksModal(true)}
+          className="btn btn-primary flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-sm"
+        >
+          <Clipboard className="h-5 w-5" />
+          Daily Tasks
+        </button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
         {/* Admin Profile Card */}
         <div className="md:col-span-1">
-          <div className="card p-6">
+          <div className="backdrop-blur-md bg-white/30 border border-white/40 shadow-xl rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:bg-white/40">
             <div className="flex flex-col items-center text-center">
-              <img 
-                src={admin.profileImage} 
-                alt={`${admin.firstName} ${admin.lastName}`} 
-                className="h-24 w-24 rounded-full object-cover"
-              />
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">{admin.firstName} {admin.lastName}</h2>
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary-400 to-primary-600 rounded-full blur opacity-30"></div>
+                <img 
+                  src={admin.profileImage} 
+                  alt={`${admin.firstName} ${admin.lastName}`} 
+                  className="relative h-24 w-24 rounded-full object-cover ring-2 ring-white/60 shadow-lg"
+                />
+              </div>
+              <h2 className="mt-4 text-xl font-semibold text-gray-800">{admin.firstName} {admin.lastName}</h2>
               <p className="text-gray-600">{admin.email}</p>
-              <p className="text-sm text-gray-500">{admin.role}</p>
+              <p className="text-sm text-gray-500/80 backdrop-blur-sm rounded-full px-3 py-1 bg-gray-100/30">{admin.role}</p>
             </div>
 
-            <div className="mt-6 divide-y divide-gray-200">
+            <div className="mt-6 space-y-2">
               <button 
                 onClick={() => setActiveTab('dashboard')} 
-                className={`flex w-full items-center justify-between py-3 text-left ${activeTab === 'dashboard' ? 'text-primary-600' : 'hover:text-primary-600'}`}
+                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
               >
                 <div className="flex items-center">
                   <User className="mr-3 h-5 w-5 text-gray-400" />
@@ -274,7 +379,7 @@ const AdminPanel = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('buses')} 
-                className={`flex w-full items-center justify-between py-3 text-left ${activeTab === 'buses' ? 'text-primary-600' : 'hover:text-primary-600'}`}
+                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'buses' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
               >
                 <div className="flex items-center">
                   <Bus className="mr-3 h-5 w-5 text-gray-400" />
@@ -284,7 +389,7 @@ const AdminPanel = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('drivers')} 
-                className={`flex w-full items-center justify-between py-3 text-left ${activeTab === 'drivers' ? 'text-primary-600' : 'hover:text-primary-600'}`}
+                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'drivers' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
               >
                 <div className="flex items-center">
                   <User className="mr-3 h-5 w-5 text-gray-400" />
@@ -294,7 +399,7 @@ const AdminPanel = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('routes')} 
-                className={`flex w-full items-center justify-between py-3 text-left ${activeTab === 'routes' ? 'text-primary-600' : 'hover:text-primary-600'}`}
+                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'routes' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
               >
                 <div className="flex items-center">
                   <MapPin className="mr-3 h-5 w-5 text-gray-400" />
@@ -302,14 +407,14 @@ const AdminPanel = () => {
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </button>
-              <Link to="/settings" className="flex items-center justify-between py-3 hover:text-primary-600">
+              <Link to="/settings" className="flex items-center justify-between p-3 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/50 hover:shadow-md">
                 <div className="flex items-center">
                   <Settings className="mr-3 h-5 w-5 text-gray-400" />
                   <span>Settings</span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>
-              <Link to="/" className="flex items-center justify-between py-3 text-red-600 hover:text-red-700">
+              <Link to="/" className="flex items-center justify-between p-3 rounded-xl backdrop-blur-sm transition-all duration-300 text-red-600 hover:bg-red-50/50 hover:shadow-md">
                 <div className="flex items-center">
                   <LogOut className="mr-3 h-5 w-5" />
                   <span>Logout</span>
@@ -342,7 +447,12 @@ const AdminPanel = () => {
                   icon={<DollarSign className="h-6 w-6" />} 
                   className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg"
                 />
-                <StatCard title="Monthly Revenue" value={`₹${stats.monthlyRevenue.toLocaleString()}`} icon={<DollarSign className="h-6 w-6" />} />
+                <StatCard 
+                  title="Monthly Revenue" 
+                  value={`₹${stats.monthlyRevenue.toLocaleString()}`} 
+                  icon={<DollarSign className="h-6 w-6" />} 
+                  className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 shadow-lg"
+                />
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">

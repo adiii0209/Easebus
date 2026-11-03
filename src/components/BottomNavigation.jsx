@@ -3,6 +3,7 @@ import { Home, Bus, Ticket, User, Route } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { spring } from './ui'
+import passengerImage from '../assets/passenger.jpeg'
 
 const BottomNavigation = () => {
   const { user } = useAuth()
@@ -47,7 +48,7 @@ const BottomNavigation = () => {
               <span className={`relative z-10 transition-colors duration-200 ${active ? 'text-primary-600' : 'text-gray-400'}`}>
                 {label === 'Profile' && user ? (
                   <img
-                    src={user.profileImage || '/src/assets/passenger.jpeg'}
+                    src={user.profileImage || passengerImage}
                     alt=""
                     className={`h-6 w-6 rounded-full object-cover ring-2 transition ${active ? 'ring-primary-500' : 'ring-transparent'}`}
                   />

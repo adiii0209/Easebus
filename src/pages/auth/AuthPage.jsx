@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { User, Mail, Lock, ArrowRight } from 'lucide-react'
+import { User, Mail, ArrowRight } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Field, Segmented } from '../../components/ui'
+import { AuthShell, PasswordField } from './AuthShell'
 
 const AuthPage = () => {
   const navigate = useNavigate()
@@ -50,104 +53,57 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            {isLogin ? 'Welcome Back!' : 'Create Account'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {isLogin ? 'Sign in to your account' : 'Sign up for a new account'}
-          </p>
-        </div>
+    <AuthShell
+      title={isLogin ? 'Welcome back' : 'Create account'}
+      subtitle={isLogin ? 'Sign in to continue your journey' : 'Join EaseBus in a few seconds'}
+    >
+      <Segmented
+        id="auth-mode"
+        value={isLogin ? 'in' : 'up'}
+        onChange={(v) => { setIsLogin(v === 'in'); setError('') }}
+        options={[{ value: 'in', label: 'Sign in' }, { value: 'up', label: 'Sign up' }]}
+        className="mb-5"
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        <AnimatePresence initial={false}>
           {!isLogin && (
-            <div>
-              <label htmlFor="name" className="sr-only">Name</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Full name"
-                />
-              </div>
-            </div>
+            <motion.div
+              key="name"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="overflow-hidden"
+            >
+              <Field id="name" name="name" label="Full name" icon={User} value={formData.name} onChange={handleChange} placeholder="Your name" autoComplete="name" />
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          <div>
-            <label htmlFor="email" className="sr-only">Email address</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-            </div>
-          </div>
+        <Field id="email" name="email" type="email" label="Email" icon={Mail} value={formData.email} onChange={handleChange} placeholder="you@example.com" autoComplete="email" />
+        <PasswordField id="password" name="password" label="Password" value={formData.password} onChange={handleChange} placeholder="••••••••" autoComplete={isLogin ? 'current-password' : 'new-password'} />
 
-          <div>
-            <label htmlFor="password" className="sr-only">Password</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+        <AnimatePresence initial={false}>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-600"
+              role="alert"
             >
-              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <ArrowRight className="h-5 w-5 text-primary-300 group-hover:text-primary-200" />
-              </span>
-              {isLogin ? 'Sign in' : 'Sign up'}
-            </button>
-          </div>
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary-600 hover:text-primary-500 transition-colors duration-200"
-            >
-              {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <button type="submit" className="btn btn-primary btn-lg btn-block">
+          {isLogin ? 'Sign in' : 'Create account'}
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      </form>
+    </AuthShell>
   )
 }
 

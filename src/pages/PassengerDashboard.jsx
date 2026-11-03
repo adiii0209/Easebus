@@ -1,13 +1,49 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Ticket, Clock, MapPin, Calendar, CreditCard, ChevronRight, Settings, LogOut } from 'lucide-react'
+import { Ticket, Clock, Calendar, CreditCard, ChevronRight, Settings, LogOut, User, ArrowRight, Bell, MapPin } from 'lucide-react'
 import busData from '../../buses.js'
 import passengerImage from '../assets/passenger.jpeg'
 import { useAuth } from '../contexts/AuthContext'
+import { PageHeader, Segmented, Pill, BusBadge, EmptyState, AlertDialog, AlertAction, Reveal } from '../components/ui'
+
+const settingsItems = [
+  { icon: User, label: 'Edit profile', to: '/profile', tint: 'bg-primary-500' },
+  { icon: CreditCard, label: 'Payment methods', to: '/payment-methods', tint: 'bg-emerald-500' },
+  { icon: Bell, label: 'Notifications', to: '/notifications', tint: 'bg-amber-500' },
+  { icon: Settings, label: 'Settings', to: '/settings', tint: 'bg-gray-500' },
+]
+
+const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+
+const TripCard = ({ booking, upcoming }) => (
+  <div className="card overflow-hidden">
+    <div className="flex items-center gap-3 p-4">
+      <BusBadge id={booking.routeNumber} />
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-[15px] font-semibold text-gray-900">{booking.routeName}</h3>
+        <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-gray-500">
+          <Calendar className="h-3 w-3" /> {formatDate(booking.date)}
+          <span>·</span>
+          <Clock className="h-3 w-3" /> {booking.departureTime}
+        </p>
+      </div>
+      <Pill tone={upcoming ? 'green' : 'gray'} dot={upcoming}>{booking.status}</Pill>
+    </div>
+    <div className="flex items-center gap-2 border-t border-dashed border-gray-200 bg-gray-50/60 px-4 py-3 text-[13px]">
+      <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+      <span className="truncate font-medium text-gray-700">{booking.from}</span>
+      <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+      <span className="truncate font-medium text-gray-700">{booking.to}</span>
+      <span className="ml-auto flex-shrink-0 text-xs tabular text-gray-400">{booking.bookingReference}</span>
+    </div>
+  </div>
+)
 
 const PassengerDashboard = () => {
   const { user: authUser, logout } = useAuth()
-  
+  const [tab, setTab] = useState('upcoming')
+  const [confirmLogout, setConfirmLogout] = useState(false)
+
   // User data
   const [user] = useState({
     firstName: 'Xavier',
@@ -48,182 +84,109 @@ const PassengerDashboard = () => {
     }))
   )
 
+  const trips = tab === 'upcoming' ? upcomingBookings : travelHistory
+
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6 page-transition">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Passenger Dashboard</h1>
-        <p className="mt-2 text-base text-gray-600">
-          Manage your bookings and view your travel history
-        </p>
-      </div>
+    <>
+      <PageHeader title="Profile" />
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* User Profile Card */}
-        <div className="md:col-span-1">
-          <div className="card p-6 transition-all duration-300 ease-in-out transform hover:scale-[1.01]">
-            <div className="flex flex-col items-center text-center">
-              <img 
-                src={user.profileImage} 
-                alt={`${user.firstName} ${user.lastName}`} 
-                className="h-24 w-24 rounded-full object-cover"
+      <div className="mx-auto max-w-2xl space-y-6 px-4">
+        {/* Identity */}
+        <div className="card relative overflow-hidden p-5">
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-primary-600" />
+          <div className="relative flex flex-col items-center pt-6 text-center">
+            <img
+              src={user.profileImage}
+              alt={`${user.firstName} ${user.lastName}`}
+              className="h-24 w-24 rounded-full object-cover shadow-ios-lg ring-4 ring-white"
+            />
+            <h2 className="mt-3 text-xl font-bold text-gray-900">{authUser?.name || `${user.firstName} ${user.lastName}`.trim()}</h2>
+            <p className="text-[14px] text-gray-500">{authUser?.email || user.email}</p>
+            <p className="mt-1 text-xs text-gray-400">Member since {user.memberSince}</p>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 divide-x divide-gray-100 rounded-2xl bg-gray-50 py-3 text-center">
+            {[
+              ['Upcoming', upcomingBookings.length],
+              ['Total trips', travelHistory.length + upcomingBookings.length],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p className="text-xl font-bold tabular text-gray-900">{value}</p>
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trips */}
+        <section>
+          <Segmented
+            id="trips"
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'upcoming', label: 'Upcoming', badge: upcomingBookings.length },
+              { value: 'history', label: 'History' },
+            ]}
+            className="mb-3"
+          />
+          {trips.length > 0 ? (
+            <div className="space-y-3" key={tab}>
+              {trips.map((booking, i) => (
+                <Reveal key={booking.id} index={i}>
+                  <TripCard booking={booking} upcoming={tab === 'upcoming'} />
+                </Reveal>
+              ))}
+            </div>
+          ) : (
+            <div className="card">
+              <EmptyState
+                icon={tab === 'upcoming' ? Ticket : Clock}
+                title={tab === 'upcoming' ? 'No upcoming bookings' : 'No travel history'}
+                message={tab === 'upcoming' ? 'You don’t have any trips scheduled.' : 'You haven’t taken any trips with us yet.'}
+                action={<Link to="/ticket-booking" className="btn btn-primary">Book a trip</Link>}
               />
-              <h2 className="mt-4 text-lg font-semibold text-gray-900">{user.firstName} {user.lastName}</h2>
-              <p className="text-base text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500">Member since {user.memberSince}</p>
             </div>
+          )}
+        </section>
 
-            <div className="mt-6 divide-y divide-gray-200">
-              <Link to="/profile" className="flex items-center justify-between py-3 hover:text-primary-600 transition-all duration-200 ease-in-out transform hover:translate-x-1">
-                <div className="flex items-center">
-                  <User className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Edit Profile</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
+        {/* Settings */}
+        <section>
+          <p className="section-label">Account</p>
+          <div className="list-group">
+            {settingsItems.map(({ icon: Icon, label, to, tint }) => (
+              <Link key={label} to={to} className="list-row">
+                <span className={`icon-tile ${tint}`}><Icon className="h-[18px] w-[18px]" /></span>
+                <span className="flex-1 text-[16px] text-gray-900">{label}</span>
+                <ChevronRight className="h-5 w-5 text-gray-300" />
               </Link>
-              <Link to="/payment-methods" className="flex items-center justify-between py-3 hover:text-primary-600 transition-all duration-200 ease-in-out transform hover:translate-x-1">
-                <div className="flex items-center">
-                  <CreditCard className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Payment Methods</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </Link>
-              <Link to="/settings" className="flex items-center justify-between py-3 hover:text-primary-600 transition-all duration-200 ease-in-out transform hover:translate-x-1">
-                <div className="flex items-center">
-                  <Settings className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Settings</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </Link>
-              <button
-                onClick={logout}
-                className="w-full flex items-center justify-between py-3 text-red-600 hover:text-red-700 transition-all duration-200 ease-in-out transform hover:translate-x-1"
-              >
-                <div className="flex items-center">
-                  <LogOut className="mr-3 h-5 w-5" />
-                  <span>Logout</span>
-                </div>
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="md:col-span-2">
-          {/* Upcoming Bookings */}
-          <div className="card mb-6">
-            <div className="border-b border-gray-200 p-4">
-              <h2 className="text-base font-semibold text-gray-900">Upcoming Bookings</h2>
-            </div>
-            
-            {upcomingBookings.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {upcomingBookings.map((booking) => (
-                  <div key={booking.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{booking.routeNumber} - {booking.routeName}</h3>
-                        <div className="mt-1 flex items-center text-sm text-gray-500">
-                          <Calendar className="mr-1 h-4 w-4" />
-                          <span>{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </div>
-                        <div className="mt-1 flex items-center text-sm text-gray-500">
-                          <Clock className="mr-1 h-4 w-4" />
-                          <span>Departure: {booking.departureTime}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                          {booking.status}
-                        </span>
-                        <p className="mt-1 text-xs text-gray-500">Ref: {booking.bookingReference}</p>
-                        <Link 
-                          to={`/bookings/${booking.id}`}
-                          className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center">
-                      <MapPin className="mr-1 h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{booking.from}</span>
-                      <ChevronRight className="mx-2 h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{booking.to}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-8">
-                <Ticket className="h-12 w-12 text-gray-300" />
-                <h3 className="mt-2 text-base font-medium text-gray-900">No upcoming bookings</h3>
-                <p className="mt-1 text-gray-500">You don't have any upcoming trips scheduled.</p>
-                <Link to="/ticket-booking" className="btn btn-primary mt-4">
-                  Book a Trip
-                </Link>
-              </div>
-            )}
+            ))}
           </div>
 
-          {/* Travel History */}
-          <div className="card">
-            <div className="border-b border-gray-200 p-4">
-              <h2 className="text-base font-semibold text-gray-900">Travel History</h2>
-            </div>
-            
-            {travelHistory.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {travelHistory.map((booking) => (
-                  <div key={booking.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{booking.routeNumber} - {booking.routeName}</h3>
-                        <div className="mt-1 flex items-center text-sm text-gray-500">
-                          <Calendar className="mr-1 h-4 w-4" />
-                          <span>{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </div>
-                        <div className="mt-1 flex items-center text-sm text-gray-500">
-                          <Clock className="mr-1 h-4 w-4" />
-                          <span>Departure: {booking.departureTime}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                          {booking.status}
-                        </span>
-                        <p className="mt-1 text-xs text-gray-500">Ref: {booking.bookingReference}</p>
-                        <Link 
-                          to={`/bookings/${booking.id}`}
-                          className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center">
-                      <MapPin className="mr-1 h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{booking.from}</span>
-                      <ChevronRight className="mx-2 h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{booking.to}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-8">
-                <Clock className="h-12 w-12 text-gray-300" />
-                <h3 className="mt-2 text-lg font-medium text-gray-900">No travel history</h3>
-                <p className="mt-1 text-gray-500">You haven't taken any trips with us yet.</p>
-                <Link to="/ticket-booking" className="btn btn-primary mt-4">
-                  Book Your First Trip
-                </Link>
-              </div>
-            )}
+          <div className="list-group mt-4">
+            <button className="list-row" onClick={() => setConfirmLogout(true)}>
+              <span className="icon-tile bg-red-500"><LogOut className="h-[18px] w-[18px]" /></span>
+              <span className="flex-1 text-[16px] font-medium text-red-500">Log out</span>
+            </button>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+
+      <AlertDialog
+        isOpen={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        tone="danger"
+        icon={<LogOut className="h-6 w-6" />}
+        title="Log out?"
+        message="You’ll need to sign in again to see your bookings."
+        actions={
+          <>
+            <AlertAction onClick={() => setConfirmLogout(false)} tone="muted">Cancel</AlertAction>
+            <AlertAction onClick={logout} tone="danger" strong>Log out</AlertAction>
+          </>
+        }
+      />
+    </>
   )
 }
 

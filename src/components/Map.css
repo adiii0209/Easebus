@@ -5,71 +5,159 @@
   width: 100%;
   height: 100%;
   z-index: 1;
+  background: #eef1f6;
+  font-family: inherit;
 }
 
-.bus-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background-color: #6366f1;
-  border: 2px solid white;
-  border-radius: 50%;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+/* Soften the OpenStreetMap tiles so markers and routes stand out */
+.leaflet-tile-pane {
+  filter: saturate(0.55) contrast(0.92) brightness(1.06);
 }
 
-.bus-marker.selected {
-  background-color: #4f46e5;
-  border-color: #c7d2fe;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
-  z-index: 1000 !important;
-}
-
-.bus-icon-container {
+/* Bus pin: rounded label with a small pointer */
+.bus-pin {
   position: relative;
-  width: 40px;
-  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 28px;
+  min-width: 40px;
+  padding: 0 9px;
+  border-radius: 14px;
+  background: #0284c7;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+  transform-origin: 50% 100%;
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.2s;
+  white-space: nowrap;
 }
 
-.bus-icon-container.selected {
-  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.7));
+.bus-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom-right-radius: 2px;
+}
+
+.bus-pin.ac { background: #7c3aed; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4); }
+
+.bus-pin.selected {
   transform: scale(1.2);
   z-index: 1000 !important;
 }
 
-.bus-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.bus-number {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  font-size: 8px; /* Reduced from 10px to 8px */
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-}
-
+/* User location: blue dot with pulsing ring */
 .user-marker {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  background-color: #0ea5e9;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.5);
+}
+
+.user-marker::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.35);
+  animation: userPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes userPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+
+path.user-radius {
+  stroke: rgba(14, 165, 233, 0.5);
+  stroke-width: 1.5;
+  fill: rgba(14, 165, 233, 0.08);
+}
+
+/* Route stop markers */
+.pickup-marker, .destination-marker {
+  position: relative;
   width: 20px;
   height: 20px;
-  background-color: #3b82f6;
-  border: 2px solid white;
+}
+.pickup-marker .marker-dot, .destination-marker .marker-dot {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.pickup-marker .marker-dot { background: #22c55e; }
+.destination-marker .marker-dot { background: #ef4444; }
+.marker-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: userPulse 2s infinite;
+}
+.pickup-marker .marker-pulse { border: 2px solid #22c55e; }
+.destination-marker .marker-pulse { border: 2px solid #ef4444; }
+
+/* Popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px;
+  padding: 2px;
+  box-shadow: 0 8px 32px rgba(16, 24, 40, 0.18);
+}
+.leaflet-popup-content {
+  margin: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.leaflet-popup-tip { box-shadow: none; }
+.leaflet-popup-close-button { display: none; }
+
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 8px 0 0 0;
+  font-size: 9px !important;
 }
 
-.user-radius {
-  border: 2px solid rgba(59, 130, 246, 0.5);
-  border-radius: 50%;
-  background-color: rgba(59, 130, 246, 0.1);
+/* Custom zoom controls */
+.map-controls {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.14), 0 0 0 0.5px rgba(16, 24, 40, 0.06);
 }
+.map-controls button {
+  display: flex;
+  height: 40px;
+  width: 40px;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: background-color 0.15s;
+}
+.map-controls button:active { background: rgba(0, 0, 0, 0.06); }
+.map-controls button + button { border-top: 1px solid rgba(0, 0, 0, 0.08); }

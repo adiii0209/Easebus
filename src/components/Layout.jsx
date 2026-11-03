@@ -1,34 +1,42 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import Navbar from './Navbar'
 import BottomNavigation from './BottomNavigation'
 import LoadingScreen from './LoadingScreen'
 
+// Screens that own the whole viewport and bring their own navigation
+const immersiveRoutes = ['/bus-details', '/admin', '/driver', '/assignment', '/management', '/finance']
+
 const Layout = () => {
   const [isLoading, setIsLoading] = useState(true)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
-    // Simulate initial loading time
-    const timer = setTimeout(() => setIsLoading(false), 1200)
+    const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    // Scroll to top whenever location changes
     window.scrollTo(0, 0)
-  }, [location])
+  }, [location.pathname])
+
+  const immersive = immersiveRoutes.some((r) => location.pathname.startsWith(r))
 
   return (
-    <div className="flex min-h-screen flex-col pb-16">
+    <div className="flex min-h-[100dvh] flex-col">
       <LoadingScreen isLoading={isLoading} />
       {location.pathname === '/' && <Navbar />}
-      <main className="flex-1 page-transition">
+      <motion.main
+        key={location.pathname}
+        className={`flex-1 ${immersive ? '' : 'pb-tabbar'}`}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
+      >
         <Outlet />
-      </main>
-      {/* Global styles moved to CSS file */}
-      <BottomNavigation />
+      </motion.main>
+      {!immersive && <BottomNavigation />}
     </div>
   )
 }

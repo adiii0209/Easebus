@@ -1,63 +1,73 @@
-import { NavLink } from 'react-router-dom';
-import { Home, Bus, Ticket, User } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
- import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom'
+import { Home, Bus, Ticket, User, Route } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useAuth } from '../contexts/AuthContext'
+import { spring } from './ui'
 
 const BottomNavigation = () => {
-  const { user } = useAuth();
-  const [activeIndex, setActiveIndex] = useState(0);
-  
-  const navItems = [
-    { icon: Home, label: 'Home', path: '/' },
-    { icon: Bus, label: 'Track Bus', path: '/bus-tracking' },
-    { icon: Ticket, label: 'Book Tickets', path: '/ticket-booking' },
-    { icon: User, label: 'Profile', path: user ? '/passenger-dashboard' : '/auth' }
-  ];
+  const { user } = useAuth()
+  const { pathname } = useLocation()
 
-  // Update active index based on current path
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    const index = navItems.findIndex(item => item.path === currentPath);
-    if (index !== -1) setActiveIndex(index);
-  }, []);
+  const navItems = [
+    { icon: Home, label: 'Home', path: '/', match: ['/'], exact: true },
+    { icon: Bus, label: 'Track', path: '/bus-tracking', match: ['/bus-tracking'] },
+    { icon: Route, label: 'Plan', path: '/route-planner', match: ['/route-planner'] },
+    { icon: Ticket, label: 'Tickets', path: '/ticket-booking', match: ['/ticket-booking'] },
+    {
+      icon: User,
+      label: 'Profile',
+      path: user ? '/passenger-dashboard' : '/auth',
+      match: ['/passenger-dashboard', '/auth', '/login', '/register'],
+    },
+  ]
+
+  const isActive = (item) =>
+    item.exact ? pathname === '/' : item.match.some((m) => pathname.startsWith(m))
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-      <div className="relative flex justify-around items-center h-16">
-        <motion.div
-          className="absolute top-0 left-0 h-0.5 bg-primary-600"
-          initial={false}
-          animate={{
-            width: '25%',
-            x: `${activeIndex * 100}%`
-          }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        />
-        {navItems.map(({ icon: Icon, label, path }, index) => (
-          <NavLink
-            key={path}
-            to={path}
-            className={({ isActive }) => {
-              if (isActive && activeIndex !== index) setActiveIndex(index);
-              return `flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive ? 'text-primary-600' : 'text-gray-600'}`;
-            }}
-          >
-            {label === 'Profile' && user ? (
-              <img
-                src={user.profileImage || '/src/assets/passenger.jpeg'}
-                alt="Profile"
-                className="h-6 w-6 rounded-full object-cover border border-gray-200"
-              />
-            ) : (
-              <Icon className="h-6 w-6" />
-            )}
-            <span className="text-xs font-medium">{label}</span>
-          </NavLink>
-        ))}
+    <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-safe pointer-events-none">
+      <div className="pointer-events-auto mx-auto mb-3 flex max-w-md items-center justify-between rounded-[28px] bg-white/80 p-1.5 shadow-ios-float ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150 animate-slide-up">
+        {navItems.map((item) => {
+          const active = isActive(item)
+          const { icon: Icon, label, path } = item
+          return (
+            <NavLink
+              key={label}
+              to={path}
+              aria-label={label}
+              className="relative flex h-[54px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] transition-transform duration-200 ease-ios active:scale-90"
+            >
+              {active && (
+                <motion.span
+                  layoutId="tab-pill"
+                  className="absolute inset-0 rounded-[22px] bg-primary-50"
+                  transition={spring}
+                />
+              )}
+              <span className={`relative z-10 transition-colors duration-200 ${active ? 'text-primary-600' : 'text-gray-400'}`}>
+                {label === 'Profile' && user ? (
+                  <img
+                    src={user.profileImage || '/src/assets/passenger.jpeg'}
+                    alt=""
+                    className={`h-6 w-6 rounded-full object-cover ring-2 transition ${active ? 'ring-primary-500' : 'ring-transparent'}`}
+                  />
+                ) : (
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.5 : 2} />
+                )}
+              </span>
+              <span
+                className={`relative z-10 text-[10.5px] font-semibold leading-none transition-colors duration-200 ${
+                  active ? 'text-primary-600' : 'text-gray-400'
+                }`}
+              >
+                {label}
+              </span>
+            </NavLink>
+          )
+        })}
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default BottomNavigation;
+export default BottomNavigation

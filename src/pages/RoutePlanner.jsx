@@ -1,7 +1,18 @@
-import { useState, useEffect } from 'react'
-import { Search, MapPin, Clock, ArrowRight, Calendar, Users, RotateCw } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
+import { Search, ArrowUpDown, Clock, ChevronDown, Ticket, Route as RouteIcon, Zap, Wallet, Shuffle, SearchX } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import busService from '../services/BusService'
 import RouteGraph from '../services/RouteGraph'
+import { PageHeader, PickerSheet, Segmented, Pill, BusBadge, EmptyState, Spinner } from '../components/ui'
+
+const getDurationMinutes = (duration) => {
+  const hourMatch = duration.match(/(\d+)h/)
+  const minuteMatch = duration.match(/(\d+)m/)
+  const hours = hourMatch ? parseInt(hourMatch[1]) : 0
+  const minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0
+  return hours * 60 + minutes
+}
 
 const RoutePlanner = () => {
   const [routeParams, setRouteParams] = useState({
@@ -12,8 +23,11 @@ const RoutePlanner = () => {
   const [searchResults, setSearchResults] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const [allStops, setAllStops] = useState([])
   const [routeGraph, setRouteGraph] = useState(null)
+  const [picker, setPicker] = useState(null) // 'from' | 'to' | null
+  const resultsRef = useRef(null)
 
   // Initialize route graph and load stops
   useEffect(() => {
@@ -24,7 +38,9 @@ const RoutePlanner = () => {
   const handleSearch = (e) => {
     e.preventDefault()
     setIsLoading(true)
-    
+    setHasSearched(true)
+    setSelectedRoute(null)
+
     if (!routeGraph) {
       setIsLoading(false)
       return
@@ -67,10 +83,10 @@ const RoutePlanner = () => {
     let currentTime = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     optimalPath.path.forEach((segment, index) => {
       const bus = busService.getBusById(segment.busId)
-      
+
       // Calculate arrival time based on duration
       const arrivalTime = calculateArrivalTime(currentTime, segment.duration)
-      
+
       route.buses.push({
         routeNumber: segment.busId,
         from: segment.from,
@@ -79,7 +95,7 @@ const RoutePlanner = () => {
         arrivalTime,
         busDetails: bus
       })
-      
+
       // Add transfer time for next segment
       if (index < optimalPath.path.length - 1) {
         currentTime = calculateArrivalTime(arrivalTime, 15) // 15 min transfer time
@@ -95,7 +111,7 @@ const RoutePlanner = () => {
     const alternativePreferences = ['duration', 'distance']
     alternativePreferences.forEach(pref => {
       if (pref === (routeParams.preferences === 'fastest' ? 'duration' : 'distance')) return
-      
+
       const altPath = routeGraph.findShortestPath(routeParams.from, routeParams.to, pref)
       if (altPath && JSON.stringify(altPath) !== JSON.stringify(optimalPath)) {
         const altRoute = {
@@ -118,7 +134,7 @@ const RoutePlanner = () => {
         altPath.path.forEach((segment, index) => {
           const bus = busService.getBusById(segment.busId)
           const arrivalTime = calculateArrivalTime(currentTime, segment.duration)
-          
+
           altRoute.buses.push({
             routeNumber: segment.busId,
             from: segment.from,
@@ -127,7 +143,7 @@ const RoutePlanner = () => {
             arrivalTime,
             busDetails: bus
           })
-          
+
           if (index < altPath.path.length - 1) {
             currentTime = calculateArrivalTime(arrivalTime, 15)
           }
@@ -142,309 +158,269 @@ const RoutePlanner = () => {
 
     // Sort routes based on user preferences
     let sortedRoutes = [...generatedRoutes]
-    
+
     if (routeParams.preferences === 'fastest') {
-      sortedRoutes.sort((a, b) => {
-        const getDurationMinutes = (duration) => {
-          const hourMatch = duration.match(/(\d+)h/)
-          const minuteMatch = duration.match(/(\d+)m/)
-          const hours = hourMatch ? parseInt(hourMatch[1]) : 0
-          const minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0
-          return hours * 60 + minutes
-        }
-        return getDurationMinutes(a.duration) - getDurationMinutes(b.duration)
-      })
+      sortedRoutes.sort((a, b) => getDurationMinutes(a.duration) - getDurationMinutes(b.duration))
     } else if (routeParams.preferences === 'cheapest') {
       sortedRoutes.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
     } else if (routeParams.preferences === 'fewest_transfers') {
       sortedRoutes.sort((a, b) => a.transfers - b.transfers)
     }
-    
+
     // Simulate API call with timeout
     setTimeout(() => {
       setSearchResults(sortedRoutes)
       setIsLoading(false)
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
     }, 1000)
   }
-  
+
   // Helper function to calculate arrival time
   const calculateArrivalTime = (departureTime, durationMinutes) => {
     const [time, period] = departureTime.split(' ')
     const [hours, minutes] = time.split(':').map(Number)
-    
+
     let totalMinutes = (hours % 12) * 60 + minutes + durationMinutes
     if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60
     if (period === 'AM' && hours === 12) totalMinutes -= 12 * 60
-    
+
     const newHours = Math.floor(totalMinutes / 60) % 24
     const newMinutes = totalMinutes % 60
-    
+
     const newPeriod = newHours >= 12 ? 'PM' : 'AM'
     const displayHours = newHours % 12 === 0 ? 12 : newHours % 12
-    
+
     return `${displayHours}:${newMinutes.toString().padStart(2, '0')} ${newPeriod}`
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setRouteParams({
-      ...routeParams,
-      [name]: value
-    })
+  const swapStops = () => {
+    setRouteParams((p) => ({ ...p, from: p.to, to: p.from }))
   }
 
   const handleRouteSelect = (route) => {
-    setSelectedRoute(route)
+    setSelectedRoute((current) => (current?.id === route.id ? null : route))
   }
 
   const getRouteLabel = (route) => {
-    if (route.transfers === 0) return 'Direct Route'
-    if (route.transfers === 1) return 'One Transfer'
-    return `${route.transfers} Transfers`
+    if (route.transfers === 0) return 'Direct'
+    if (route.transfers === 1) return '1 transfer'
+    return `${route.transfers} transfers`
   }
 
-  const getRouteTagColor = (route) => {
-    if (route.transfers === 0) return 'bg-green-100 text-green-800'
-    if (route.transfers === 1) return 'bg-blue-100 text-blue-800'
-    return 'bg-yellow-100 text-yellow-800'
+  const getRouteTagTone = (route) => {
+    if (route.transfers === 0) return 'green'
+    if (route.transfers === 1) return 'blue'
+    return 'amber'
   }
+
+  const minPrice = Math.min(...searchResults.map((r) => r.price))
+  const minDuration = Math.min(...searchResults.map((r) => getDurationMinutes(r.duration)))
+  const canSearch = routeParams.from && routeParams.to && routeParams.from !== routeParams.to
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Route Planner</h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Plan your journey with our comprehensive route planner.
-        </p>
-      </div>
+    <>
+      <PageHeader title="Plan" subtitle="Find the best way across the city" />
 
-      {/* Search Form */}
-      <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Plan Your Route</h2>
-        <form onSubmit={handleSearch}>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-            <div className="lg:col-span-2">
-              <label htmlFor="from" className="block text-sm font-medium text-gray-700">From</label>
-              <div className="mt-1 flex rounded-md shadow-sm">
-                <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500">
-                  <MapPin className="h-4 w-4" />
+      <div className="mx-auto max-w-2xl space-y-5 px-4">
+        {/* Search Form */}
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="card relative p-1.5">
+            {/* connector line */}
+            <span className="absolute bottom-[3.1rem] left-[1.55rem] top-[3.1rem] w-px border-l-2 border-dotted border-gray-300" />
+            <button type="button" onClick={() => setPicker('from')} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors active:bg-gray-50">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">From</span>
+                <span className={`block truncate text-[16px] ${routeParams.from ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>
+                  {routeParams.from || 'Choose starting stop'}
                 </span>
-                <select
-                  id="from"
-                  name="from"
-                  value={routeParams.from}
-                  onChange={handleInputChange}
-                  className="block w-full flex-1 rounded-none rounded-r-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                  required
-                >
-                  <option value="">Select starting location</option>
-                  {allStops.map(stop => (
-                    <option key={stop} value={stop}>{stop}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="lg:col-span-2">
-              <label htmlFor="to" className="block text-sm font-medium text-gray-700">To</label>
-              <div className="mt-1 flex rounded-md shadow-sm">
-                <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500">
-                  <MapPin className="h-4 w-4" />
+              </span>
+            </button>
+            <div className="mx-3 h-px bg-gray-100" />
+            <button type="button" onClick={() => setPicker('to')} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors active:bg-gray-50">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">To</span>
+                <span className={`block truncate text-[16px] ${routeParams.to ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>
+                  {routeParams.to || 'Choose destination'}
                 </span>
-                <select
-                  id="to"
-                  name="to"
-                  value={routeParams.to}
-                  onChange={handleInputChange}
-                  className="block w-full flex-1 rounded-none rounded-r-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                  required
-                >
-                  <option value="">Select destination</option>
-                  {allStops.map(stop => (
-                    <option key={stop} value={stop}>{stop}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+              </span>
+            </button>
 
-            <div className="flex items-end">
-              <button type="submit" className="btn btn-primary w-full">
-                <Search className="mr-2 h-4 w-4" />
-                Find Routes
-              </button>
-            </div>
-            
-
-            
-            <div className="lg:col-span-1">
-              <label htmlFor="preferences" className="block text-sm font-medium text-gray-700">Preferences</label>
-              <select
-                id="preferences"
-                name="preferences"
-                value={routeParams.preferences}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              >
-                <option value="fastest">Fastest Route</option>
-                <option value="cheapest">Cheapest Route</option>
-                <option value="fewest_transfers">Fewest Transfers</option>
-              </select>
-            </div>
+            <button
+              type="button"
+              onClick={swapStops}
+              className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary-600 shadow-ios-float ring-1 ring-black/5 transition-transform duration-300 ease-ios active:rotate-180 active:scale-90"
+              aria-label="Swap origin and destination"
+            >
+              <ArrowUpDown className="h-[18px] w-[18px]" />
+            </button>
           </div>
+
+          <Segmented
+            id="pref"
+            value={routeParams.preferences}
+            onChange={(v) => setRouteParams({ ...routeParams, preferences: v })}
+            options={[
+              { value: 'fastest', label: 'Fastest', icon: <Zap className="h-3.5 w-3.5" /> },
+              { value: 'cheapest', label: 'Cheapest', icon: <Wallet className="h-3.5 w-3.5" /> },
+              { value: 'fewest_transfers', label: 'Fewer stops', icon: <Shuffle className="h-3.5 w-3.5" /> },
+            ]}
+          />
+
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={!canSearch || isLoading}>
+            {isLoading ? <Spinner className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            {isLoading ? 'Finding routes…' : 'Find routes'}
+          </button>
         </form>
+
+        {/* Results */}
+        <div ref={resultsRef} className="scroll-mt-16">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[0, 1].map((i) => (
+                <div key={i} className="card space-y-3 p-4">
+                  <div className="skeleton h-5 w-24" />
+                  <div className="skeleton h-10 w-full" />
+                  <div className="skeleton h-5 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : searchResults.length > 0 ? (
+            <div>
+              <p className="section-label">{searchResults.length} route{searchResults.length > 1 ? 's' : ''} found</p>
+              <div className="space-y-3">
+                {searchResults.map((route, i) => {
+                  const expanded = selectedRoute?.id === route.id
+                  return (
+                    <motion.div
+                      key={route.id}
+                      layout
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: i * 0.07, ease: [0.32, 0.72, 0, 1] }}
+                      className={`card overflow-hidden transition-shadow duration-300 ${expanded ? 'shadow-ios-lg ring-2 ring-primary-500/40' : ''}`}
+                    >
+                      <button className="block w-full p-4 text-left" onClick={() => handleRouteSelect(route)} aria-expanded={expanded}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex flex-wrap gap-1.5">
+                            <Pill tone={getRouteTagTone(route)}>{getRouteLabel(route)}</Pill>
+                            {searchResults.length > 1 && route.price === minPrice && <Pill tone="green">Cheapest</Pill>}
+                            {searchResults.length > 1 && getDurationMinutes(route.duration) === minDuration && <Pill tone="violet">Fastest</Pill>}
+                          </div>
+                          <span className="text-2xl font-bold tabular text-gray-900">₹{route.price}</span>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-3">
+                          <div>
+                            <p className="text-lg font-bold tabular text-gray-900">{route.departureTime}</p>
+                          </div>
+                          <div className="flex flex-1 flex-col items-center">
+                            <span className="text-xs font-semibold text-gray-500">{route.duration}</span>
+                            <div className="relative my-1 h-0.5 w-full rounded-full bg-gray-200">
+                              {route.buses.slice(1).map((_, idx) => (
+                                <span
+                                  key={idx}
+                                  className="absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border-2 border-amber-400 bg-white"
+                                  style={{ left: `${((idx + 1) / route.buses.length) * 100}%` }}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-400">{route.distance}</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold tabular text-gray-900">{route.arrivalTime}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                            {route.buses.map((b, idx) => (
+                              <BusBadge key={idx} id={b.routeNumber} className="h-7 min-w-0 rounded-lg px-2 text-xs" />
+                            ))}
+                          </div>
+                          <ChevronDown className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-300 ease-ios ${expanded ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {expanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t border-gray-100 bg-gray-50/60 p-4">
+                              <p className="section-label flex items-center gap-1.5"><RouteIcon className="h-3.5 w-3.5" /> Journey</p>
+                              <div>
+                                {route.buses.map((bus, index) => (
+                                  <div key={index} className="relative flex gap-3.5">
+                                    {index < route.buses.length - 1 && <span className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-0.5 rounded-full bg-primary-200" />}
+                                    <span className="relative z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
+                                      {index + 1}
+                                    </span>
+                                    <div className="flex-1 pb-5">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-[15px] font-semibold text-gray-900">Bus {bus.routeNumber}</h4>
+                                        <span className="flex items-center gap-1 text-xs tabular text-gray-500">
+                                          <Clock className="h-3 w-3" /> {bus.departureTime} → {bus.arrivalTime}
+                                        </span>
+                                      </div>
+                                      <p className="mt-1 text-[13px] text-gray-500">
+                                        <span className="font-medium text-gray-800">{bus.from}</span> to <span className="font-medium text-gray-800">{bus.to}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <Link
+                                to={`/ticket-booking?busId=${encodeURIComponent(route.buses[0].routeNumber)}&from=${encodeURIComponent(route.buses[0].from)}&to=${encodeURIComponent(route.buses[0].to)}`}
+                                className="btn btn-primary btn-block mt-1"
+                              >
+                                <Ticket className="h-[18px] w-[18px]" /> Book this route · ₹{route.price}
+                              </Link>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : hasSearched ? (
+            <div className="card">
+              <EmptyState icon={SearchX} title="No routes found" message="We couldn’t connect those two stops. Try a nearby stop instead." />
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      {/* Search Results */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <RotateCw className="h-8 w-8 animate-spin text-primary-600" />
-          <span className="ml-2 text-lg font-medium text-gray-600">Finding the best routes for you...</span>
-        </div>
-      ) : searchResults.length > 0 ? (
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 p-4">
-            <h2 className="text-xl font-semibold text-gray-900">Available Routes</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              From {routeParams.from || 'Downtown'} to {routeParams.to || 'Airport'} {routeParams.date ? `on ${routeParams.date}` : ''}
-            </p>
-          </div>
-          
-          <div className="divide-y divide-gray-200">
-            {searchResults.map((route) => (
-              <div 
-                key={route.id} 
-                className={`cursor-pointer p-4 transition-colors hover:bg-gray-50 ${selectedRoute?.id === route.id ? 'bg-primary-50' : ''}`}
-                onClick={() => handleRouteSelect(route)}
-              >
-                <div className="flex flex-col justify-between md:flex-row md:items-center">
-                  <div className="mb-4 md:mb-0">
-                    <div className="flex items-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getRouteTagColor(route)}`}>
-                        {getRouteLabel(route)}
-                      </span>
-                      {route.price === Math.min(...searchResults.map(r => r.price)) && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                          Cheapest
-                        </span>
-                      )}
-                      {route.duration === Math.min(...searchResults.map(r => r.duration.replace(/[^0-9]/g, ''))) && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                          Fastest
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
-                      <Clock className="mr-1 h-4 w-4" />
-                      <span>{route.departureTime} - {route.arrivalTime} ({route.duration})</span>
-                    </div>
-                    <div className="mt-2 text-sm text-gray-500">
-                      {route.distance} • {route.transfers === 0 ? 'Direct' : `${route.transfers} transfer${route.transfers > 1 ? 's' : ''}`}
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">₹{route.price}</div>
-                    <button 
-                      className="btn btn-primary mt-3"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRouteSelect(route)
-                      }}
-                    >
-                      Select
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Selected Route Details */}
-      {selectedRoute && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900">Route Details</h2>
-          
-          <div className="mt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">From</p>
-                <p className="text-lg font-medium text-gray-900">{selectedRoute.from}</p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-              <div className="text-right">
-                <p className="text-sm text-gray-500">To</p>
-                <p className="text-lg font-medium text-gray-900">{selectedRoute.to}</p>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Departure</p>
-                <p className="text-lg font-medium text-gray-900">{selectedRoute.departureTime}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Duration</p>
-                <p className="text-lg font-medium text-gray-900">{selectedRoute.duration}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Arrival</p>
-                <p className="text-lg font-medium text-gray-900">{selectedRoute.arrivalTime}</p>
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <h3 className="text-lg font-medium text-gray-900">Journey Details</h3>
-              
-              <div className="mt-4 space-y-6">
-                {selectedRoute.buses.map((bus, index) => (
-                  <div key={index} className="relative">
-                    {index > 0 && (
-                      <div className="absolute left-4 top-0 h-full w-0.5 -translate-x-1/2 bg-gray-200"></div>
-                    )}
-                    <div className="relative flex">
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary-500 bg-white text-sm font-medium text-primary-600">
-                        {index + 1}
-                      </div>
-                      <div className="ml-4 flex-grow">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-base font-medium text-gray-900">Bus {bus.routeNumber}</h4>
-                          <span className="text-sm text-gray-500">{bus.departureTime} - {bus.arrivalTime}</span>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-500">From</p>
-                            <p className="font-medium text-gray-900">{bus.from}</p>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-gray-400" />
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">To</p>
-                            <p className="font-medium text-gray-900">{bus.to}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-8 rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Price</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{selectedRoute.price}</p>
-                </div>
-                <button className="btn btn-primary">
-                  Book This Route
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <PickerSheet
+        isOpen={picker === 'from'}
+        onClose={() => setPicker(null)}
+        title="Starting stop"
+        options={allStops}
+        value={routeParams.from}
+        onSelect={(stop) => setRouteParams((p) => ({ ...p, from: stop }))}
+        placeholder="Search stops"
+      />
+      <PickerSheet
+        isOpen={picker === 'to'}
+        onClose={() => setPicker(null)}
+        title="Destination"
+        options={allStops}
+        value={routeParams.to}
+        onSelect={(stop) => setRouteParams((p) => ({ ...p, to: stop }))}
+        placeholder="Search stops"
+      />
+    </>
   )
 }
 

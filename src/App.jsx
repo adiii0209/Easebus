@@ -8,6 +8,8 @@ import TicketBooking from './pages/TicketBooking'
 import Notifications from './pages/Notifications'
 import PassengerDashboard from './pages/PassengerDashboard'
 import AuthPage from './pages/auth/AuthPage'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import { LocationProvider } from './contexts/LocationContext'
@@ -31,6 +33,8 @@ function App() {
           <Route path="/ticket-booking" element={<TicketBooking />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/passenger-dashboard" element={
             <ProtectedRoute>
               <PassengerDashboard />

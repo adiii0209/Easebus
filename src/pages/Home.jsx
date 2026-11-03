@@ -1,249 +1,213 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Clock, CreditCard, Map, Bell, Shield } from 'lucide-react'
+import { MapPin, Clock, CreditCard, Map, Bell, Shield, Bus, Route, Ticket, Search, ChevronRight, ArrowRight, Check } from 'lucide-react'
 import AnimatedBus from '../components/AnimatedBus'
+import { Avatar, BusBadge, Reveal } from '../components/ui'
+import busService from '../services/BusService'
+import { useAuth } from '../contexts/AuthContext'
+
+const quickActions = [
+  { label: 'Track', icon: Bus, to: '/bus-tracking', gradient: 'bg-primary-600' },
+  { label: 'Plan', icon: Route, to: '/route-planner', gradient: 'bg-secondary-600' },
+  { label: 'Tickets', icon: Ticket, to: '/ticket-booking', gradient: 'bg-emerald-600' },
+  { label: 'Alerts', icon: Bell, to: '/notifications', gradient: 'bg-amber-500' },
+]
+
+const features = [
+  { icon: MapPin, title: 'Real-time Bus Tracking', description: 'See exactly when your bus will arrive at your stop.', link: '/bus-tracking', gradient: 'bg-primary-600' },
+  { icon: CreditCard, title: 'Easy Ticket Booking', description: 'Book tickets in a few taps and secure your seat.', link: '/ticket-booking', gradient: 'bg-emerald-600' },
+  { icon: Map, title: 'Route Planning', description: 'Find the best route, with transfers worked out for you.', link: '/route-planner', gradient: 'bg-secondary-600' },
+  { icon: Bell, title: 'Notifications', description: 'Timely updates about delays and service changes.', link: '/notifications', gradient: 'bg-amber-500' },
+  { icon: Clock, title: 'Schedule Viewing', description: 'Browse timings for every route in advance.', link: '/route-planner', gradient: 'bg-indigo-500' },
+  { icon: Shield, title: 'Secure Payments', description: 'Pay with card, UPI or cash on board.', link: '/ticket-booking', gradient: 'bg-rose-500' },
+]
+
+const steps = [
+  { title: 'Create an account', text: 'Sign up for free to unlock every feature.' },
+  { title: 'Plan your journey', text: 'Use the route planner to find the best buses.' },
+  { title: 'Book & travel', text: 'Book your ticket and track your bus live.' },
+]
+
+const testimonials = [
+  {
+    name: 'Sarah Johnson',
+    role: 'Daily Commuter',
+    content: 'EaseBus has completely transformed my daily commute. I no longer have to guess when my bus will arrive, and booking tickets in advance has saved me so much time!',
+  },
+  {
+    name: 'Michael Chen',
+    role: 'Business Traveler',
+    content: 'As someone who travels frequently for business, the route planner feature has been invaluable. It helps me navigate unfamiliar cities with ease and confidence.',
+  },
+  {
+    name: 'Emily Rodriguez',
+    role: 'Student',
+    content: 'The affordable prices and reliable service make EaseBus perfect for students like me. The real-time tracking feature ensures I never miss my bus to class!',
+  },
+]
 
 const Home = () => {
-  const features = [
-    {
-      icon: <MapPin className="h-10 w-10 text-primary-600" />,
-      title: 'Real-time Bus Tracking',
-      description: 'Track your bus in real-time and know exactly when it will arrive at your stop.',
-      link: '/bus-tracking'
-    },
-    {
-      icon: <CreditCard className="h-10 w-10 text-primary-600" />,
-      title: 'Easy Ticket Booking',
-      description: 'Book your bus tickets online with just a few clicks and secure your seat.',
-      link: '/ticket-booking'
-    },
-    {
-      icon: <Map className="h-10 w-10 text-primary-600" />,
-      title: 'Route Planning',
-      description: 'Plan your journey with our intelligent route planner to find the best route.',
-      link: '/route-planner'
-    },
-    {
-      icon: <Bell className="h-10 w-10 text-primary-600" />,
-      title: 'Notifications',
-      description: 'Get timely notifications about your bus, delays, and other important updates.',
-      link: '/notifications'
-    },
-    {
-      icon: <Clock className="h-10 w-10 text-primary-600" />,
-      title: 'Schedule Viewing',
-      description: 'View bus schedules for all routes and plan your journey accordingly.',
-      link: '/route-planner'
-    },
-    {
-      icon: <Shield className="h-10 w-10 text-primary-600" />,
-      title: 'Secure Payments',
-      description: 'Make secure payments for your tickets using various payment methods.',
-      link: '/ticket-booking'
-    },
-  ]
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Daily Commuter',
-      content: 'EaseBus has completely transformed my daily commute. I no longer have to guess when my bus will arrive, and booking tickets in advance has saved me so much time!',
-      avatar: 'https://randomuser.me/api/portraits/women/1.jpg'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Business Traveler',
-      content: 'As someone who travels frequently for business, the route planner feature has been invaluable. It helps me navigate unfamiliar cities with ease and confidence.',
-      avatar: 'https://randomuser.me/api/portraits/men/2.jpg'
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Student',
-      content: 'The affordable prices and reliable service make EaseBus perfect for students like me. The real-time tracking feature ensures I never miss my bus to class!',
-      avatar: 'https://randomuser.me/api/portraits/women/3.jpg'
-    },
-  ]
+  const { user } = useAuth()
+  const popularBuses = busService.getAllBuses().slice(0, 8)
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-primary-600 py-12 text-white overflow-hidden">
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="font-sans text-yellow-400 text-5xl md:text-7xl font-bold mb-3 animate-slide-down">
-              EaseBus
-            </h1>
-            <p className="text-lg text-primary-100 mb-4 animate-slide-up delay-200">
-              Tracking Made Easy
-            </p>
-          </div>
-          <div className="mt-6 max-w-md mx-auto animate-slide-up delay-700">
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-b-[40px] bg-gradient-to-br from-indigo-600 via-purple-600 to-primary-600 pb-20 pt-[calc(env(safe-area-inset-top)+4.5rem)] text-white">
+
+        <div className="relative mx-auto max-w-2xl px-5 text-center">
+          <p className="animate-slide-up text-sm font-medium text-white/70">
+            {user ? `Welcome back, ${user.name?.split(' ')[0] || 'traveller'}` : 'Welcome to'}
+          </p>
+          <h1 className="animate-slide-up text-[56px] font-extrabold leading-none tracking-tight text-yellow-400" style={{ animationDelay: '60ms' }}>
+            EaseBus
+          </h1>
+          <p className="mt-2 animate-slide-up text-lg text-primary-100" style={{ animationDelay: '120ms' }}>
+            Tracking Made Easy
+          </p>
+
+          <div className="mx-auto mt-6 max-w-sm" style={{ animationDelay: '200ms' }}>
             <AnimatedBus />
           </div>
-          <div className="mt-8 flex justify-center space-x-6 animate-fade-in delay-500">
-            <Link 
-              to="/bus-tracking" 
-              className="px-6 py-3 bg-white text-primary-700 rounded-full font-semibold hover:bg-opacity-90 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Track Your Bus
-            </Link>
-            <Link 
-              to="/ticket-booking" 
-              className="px-6 py-3 bg-primary-700 text-white rounded-full font-semibold hover:bg-opacity-90 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Book Tickets
-            </Link>
-          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary-600/30 pointer-events-none"></div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything You Need for Hassle-free Travel
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-              Our comprehensive features make bus travel easier, more reliable, and more enjoyable than ever before.
-            </p>
-          </div>
+      {/* Floating search */}
+      <div className="relative z-10 mx-auto -mt-7 w-full max-w-2xl px-5">
+        <Link
+          to="/route-planner"
+          className="flex h-14 animate-slide-up items-center gap-3 rounded-2xl bg-white px-4 shadow-ios-lg ring-1 ring-black/5 transition active:scale-[0.98]"
+          style={{ animationDelay: '250ms' }}
+        >
+          <Search className="h-5 w-5 text-primary-600" />
+          <span className="flex-1 text-[16px] text-gray-400">Where do you want to go?</span>
+          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">Plan</span>
+        </Link>
+      </div>
 
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="group relative overflow-hidden rounded-xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 border border-gray-100"
+      <div className="mx-auto w-full max-w-2xl space-y-9 px-5 pt-7">
+        {/* Quick actions */}
+        <section className="grid grid-cols-4 gap-3">
+          {quickActions.map(({ label, icon: Icon, to, gradient }, i) => (
+            <Reveal key={label} index={i + 5}>
+              <Link to={to} className="group flex flex-col items-center gap-2 transition active:scale-90">
+                <span className={`flex h-[60px] w-[60px] items-center justify-center rounded-[20px] ${gradient} text-white shadow-ios transition-transform duration-300 ease-ios group-hover:-translate-y-0.5`}>
+                  <Icon className="h-7 w-7" strokeWidth={2} />
+                </span>
+                <span className="text-xs font-semibold text-gray-700">{label}</span>
+              </Link>
+            </Reveal>
+          ))}
+        </section>
+
+        {/* Popular routes */}
+        <section>
+          <div className="mb-3 flex items-end justify-between px-1">
+            <h2 className="text-[22px] font-bold text-gray-900">Popular routes</h2>
+            <Link to="/bus-tracking" className="flex items-center text-sm font-medium text-primary-600">
+              See all <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2">
+            {popularBuses.map((bus) => (
+              <Link
+                key={bus.busId}
+                to={`/bus-details/${bus.busId}`}
+                className="card hover-lift w-[230px] flex-shrink-0 snap-start p-4 transition active:scale-[0.97]"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-primary-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative z-10">
-                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary-600/10 text-primary-600">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-700">{feature.title}</h3>
-                  <p className="mt-3 text-gray-600 group-hover:text-gray-700">{feature.description}</p>
-                  <Link 
-                    to={feature.link} 
-                    className="mt-6 inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700 group-hover:underline"
-                  >
-                    Learn more
-                    <svg className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
+                <div className="flex items-center justify-between">
+                  <BusBadge id={bus.busId} />
+                  <span className="text-xs font-medium text-gray-400">{bus.stops.length} stops</span>
+                </div>
+                <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-[15px] font-semibold leading-snug text-gray-900">{bus.route}</p>
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="truncate">{bus.stops[0]}</span>
+                  <ArrowRight className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{bus.stops[bus.stops.length - 1]}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Features */}
+        <section>
+          <h2 className="mb-3 px-1 text-[22px] font-bold text-gray-900">Everything you need</h2>
+          <div className="list-group">
+            {features.map(({ icon: Icon, title, description, link, gradient }) => (
+              <Link key={title} to={link} className="list-row gap-4 py-3.5">
+                <span className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${gradient} text-white`}>
+                  <Icon className="h-[22px] w-[22px]" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
+                  <p className="mt-0.5 text-[13px] leading-snug text-gray-500">{description}</p>
+                </div>
+                <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-300" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section>
+          <h2 className="mb-3 px-1 text-[22px] font-bold text-gray-900">How it works</h2>
+          <div className="card p-5">
+            {steps.map((step, i) => (
+              <div key={step.title} className="relative flex gap-4 pb-6 last:pb-0">
+                {i < steps.length - 1 && <span className="absolute left-[15px] top-9 h-[calc(100%-2.25rem)] w-0.5 rounded-full bg-primary-100" />}
+                <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
+                  {i + 1}
+                </span>
+                <div className="pt-0.5">
+                  <h3 className="text-[15px] font-semibold text-gray-900">{step.title}</h3>
+                  <p className="mt-0.5 text-sm text-gray-500">{step.text}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works Section */}
-      <section className="bg-gray-50 py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              How EaseBus Works
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-              Get started with EaseBus in just a few simple steps.
-            </p>
+        {/* Testimonials */}
+        <section>
+          <h2 className="mb-3 px-1 text-[22px] font-bold text-gray-900">Loved by commuters</h2>
+          <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2">
+            {testimonials.map((t) => (
+              <figure key={t.name} className="card w-[290px] flex-shrink-0 snap-start p-5">
+                <div className="flex items-center gap-3">
+                  <Avatar name={t.name} size="h-11 w-11" />
+                  <figcaption>
+                    <h4 className="text-[15px] font-semibold text-gray-900">{t.name}</h4>
+                    <p className="text-xs text-gray-500">{t.role}</p>
+                  </figcaption>
+                </div>
+                <blockquote className="mt-3 text-[14px] leading-relaxed text-gray-600">“{t.content}”</blockquote>
+              </figure>
+            ))}
           </div>
+        </section>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                <span className="text-xl font-bold">1</span>
-              </div>
-              <h3 className="mt-6 text-xl font-semibold text-gray-900">Create an Account</h3>
-              <p className="mt-2 text-gray-600">
-                Sign up for a free account to access all features of EaseBus.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                <span className="text-xl font-bold">2</span>
-              </div>
-              <h3 className="mt-6 text-xl font-semibold text-gray-900">Plan Your Journey</h3>
-              <p className="mt-2 text-gray-600">
-                Use our route planner to find the best bus routes for your destination.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                <span className="text-xl font-bold">3</span>
-              </div>
-              <h3 className="mt-6 text-xl font-semibold text-gray-900">Book & Travel</h3>
-              <p className="mt-2 text-gray-600">
-                Book your tickets, track your bus in real-time, and enjoy your journey.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link to="/register" className="btn btn-primary">
-              Get Started Now
+        {/* CTA */}
+        <section className="relative overflow-hidden rounded-3xl bg-primary-700 p-6 text-center text-white shadow-ios-lg">
+          <h2 className="relative text-2xl font-bold tracking-tight">Ready to simplify your bus travel?</h2>
+          <p className="relative mx-auto mt-2 max-w-xs text-[15px] text-primary-100">
+            Join thousands of travellers who ride smarter with EaseBus.
+          </p>
+          <div className="relative mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+            {user ? (
+              <Link to="/ticket-booking" className="btn btn-lg bg-white text-primary-700 hover:bg-primary-50">
+                <Ticket className="h-5 w-5" /> Book a ticket
+              </Link>
+            ) : (
+              <Link to="/register" className="btn btn-lg bg-white text-primary-700 hover:bg-primary-50">
+                <Check className="h-5 w-5" strokeWidth={3} /> Sign up for free
+              </Link>
+            )}
+            <Link to="/bus-tracking" className="btn btn-lg bg-white/15 text-white ring-1 ring-inset ring-white/30 hover:bg-white/25">
+              Try bus tracking
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              What Our Users Say
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-              Thousands of people use EaseBus every day. Here's what some of them have to say.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="card p-6">
-                <div className="flex items-center space-x-4">
-                  <img 
-                    src={testimonial.avatar} 
-                    alt={testimonial.name} 
-                    className="h-12 w-12 rounded-full"
-                  />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
-                  </div>
-                </div>
-                <p className="mt-4 text-gray-600">"{testimonial.content}"</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-primary-600 py-16 text-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Ready to Simplify Your Bus Travel?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-primary-100">
-              Join thousands of satisfied users who have transformed their travel experience with EaseBus.
-            </p>
-            <div className="mt-10 flex flex-col justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-              <Link to="/register" className="btn bg-white text-primary-700 hover:bg-primary-50">
-                Sign Up for Free
-              </Link>
-              <Link to="/bus-tracking" className="btn bg-primary-700 text-white hover:bg-primary-800 border border-white">
-                Try Bus Tracking
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import './AssignmentPage.css';
 import { useNavigate } from 'react-router-dom';
-import { User, Bus, Shuffle, Save, Clock, Calendar, Filter, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Shuffle, Save, Clock, Sun, Sunset, Moon, User, Ticket } from 'lucide-react';
+import toast from 'react-hot-toast';
 import busData from '../../buses.js';
+import { PageHeader, Segmented, BusBadge, Pill, Spinner } from '../components/ui';
 
 const AssignmentPage = () => {
   const navigate = useNavigate();
@@ -13,14 +14,15 @@ const AssignmentPage = () => {
   const [availableConductors, setAvailableConductors] = useState([]);
   const [assignments, setAssignments] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   // Get unique timings from all buses
   const availableTimings = [...new Set(busData.flatMap(bus => bus.timings))];
 
   const shifts = [
-    { id: 'morning', label: 'Morning Shift', time: '6:00 AM - 2:00 PM' },
-    { id: 'afternoon', label: 'Afternoon Shift', time: '2:00 PM - 10:00 PM' },
-    { id: 'night', label: 'Night Shift', time: '10:00 PM - 6:00 AM' }
+    { id: 'morning', label: 'Morning', time: '6 AM – 2 PM', icon: Sun },
+    { id: 'afternoon', label: 'Afternoon', time: '2 – 10 PM', icon: Sunset },
+    { id: 'night', label: 'Night', time: '10 PM – 6 AM', icon: Moon }
   ];
 
   useEffect(() => {
@@ -65,17 +67,19 @@ const AssignmentPage = () => {
       { id: 9, name: 'Ashok Nair', experience: 4, preferredShifts: ['morning', 'afternoon'], gender: 'male' },
       { id: 10, name: 'Rajendra Prasad', experience: 3, preferredShifts: ['morning'], gender: 'male' }
     ]);
-  }, [activeTab]);
+  }, [activeTab, selectedTime]);
 
   const handleRandomAssignment = async () => {
     const newAssignments = {};
     const availableDriversList = availableDrivers.filter(driver => driver.preferredShifts.includes(activeTab));
     const availableConductorsList = availableConductors.filter(conductor => conductor.preferredShifts.includes(activeTab));
-    
+
     if (availableDriversList.length === 0 || availableConductorsList.length === 0) {
-      alert('Not enough staff available for this shift!');
+      toast.error('Not enough staff available for this shift');
       return;
     }
+
+    setIsAssigning(true);
 
     // Iterate through buses with delay for animation
     for (const bus of activeBuses) {
@@ -94,12 +98,17 @@ const AssignmentPage = () => {
       const busCard = document.getElementById(`bus-${bus.id}`);
       if (busCard) {
         busCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        busCard.classList.remove('animate-assignment');
+        void busCard.offsetWidth; // restart the pulse animation
         busCard.classList.add('animate-assignment');
       }
 
       // Add delay between assignments
       await new Promise(resolve => setTimeout(resolve, 800));
     }
+
+    setIsAssigning(false);
+    toast.success('Staff assigned to all buses');
   };
 
   const handleManualAssignment = (busId, staffType, staffId) => {
@@ -120,191 +129,132 @@ const AssignmentPage = () => {
 
   const handleSaveAssignments = () => {
     console.log('Saving assignments:', { date: selectedDate, shift: activeTab, assignments });
-    alert('Assignments saved successfully!');
+    toast.success('Assignments saved');
     navigate('/admin');
   };
 
+  const assignedCount = activeBuses.filter(b => assignments[b.id]?.driver && assignments[b.id]?.conductor).length;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-7xl">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-gray-600 transition hover:bg-gray-200"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back
-        </button>
-        <div className="mb-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Staff Assignment</h1>
-              <p className="mt-1 text-gray-600">Manage bus staff assignments by shift</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="border-none bg-transparent focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={handleRandomAssignment}
-                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700"
-              >
-                <Shuffle className="h-5 w-5" />
-                Auto Assign
+    <>
+      <PageHeader title="Staff" subtitle="Assign crews to buses by shift" back backTo="/admin" />
+
+      <div className="mx-auto max-w-5xl space-y-5 px-4 pb-32">
+        {/* Date + auto assign */}
+        <div className="flex gap-2.5">
+          <label className="card flex flex-1 items-center gap-2.5 px-3.5">
+            <Clock className="h-[18px] w-[18px] flex-shrink-0 text-primary-600" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="h-12 w-full min-w-0 bg-transparent text-[15px] font-medium text-gray-900 focus:outline-none"
+            />
+          </label>
+          <button onClick={handleRandomAssignment} disabled={isAssigning} className="btn btn-primary h-auto px-4">
+            {isAssigning ? <Spinner className="h-5 w-5" /> : <Shuffle className="h-5 w-5" />}
+            <span className="hidden sm:inline">Auto assign</span>
+          </button>
+        </div>
+
+        {/* Shift */}
+        <Segmented
+          id="shift"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={shifts.map(({ id, label, icon: Icon }) => ({ value: id, label, icon: <Icon className="h-4 w-4" /> }))}
+        />
+        <p className="-mt-2 text-center text-xs text-gray-500">{shifts.find(s => s.id === activeTab)?.time}</p>
+
+        {/* Timing chips */}
+        <div>
+          <p className="section-label">Bus timing</p>
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+            <button onClick={() => setSelectedTime('')} className={`chip ${selectedTime === '' ? 'chip-active' : ''}`}>All</button>
+            {availableTimings.sort().map((time) => (
+              <button key={time} onClick={() => setSelectedTime(time)} className={`chip tabular ${selectedTime === time ? 'chip-active' : ''}`}>
+                {time}
               </button>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Select Bus Timing</h2>
-            <div className="flex flex-wrap gap-2">
-              {availableTimings.sort().map((time) => (
-                <button
-                  key={time}
-                  onClick={() => setSelectedTime(time)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    selectedTime === time
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="mb-6 flex space-x-1 rounded-xl bg-white p-1 shadow-sm">
-          {shifts.map((shift) => (
-            <button
-              key={shift.id}
-              onClick={() => setActiveTab(shift.id)}
-              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
-                activeTab === shift.id
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{shift.label}</span>
-              </div>
-              <div className="mt-1 text-xs opacity-80">{shift.time}</div>
-            </button>
-          ))}
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {activeBuses.map(bus => (
-            <div id={`bus-${bus.id}`} key={bus.id} className="overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-md">
-              <div className="border-b bg-gray-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-indigo-100 p-2">
-                      <Bus className="h-6 w-6 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{bus.busNumber}</h3>
-                      <p className="text-sm text-gray-500">{bus.route}</p>
-                    </div>
+        {/* Bus cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {activeBuses.map((bus, i) => {
+            const a = assignments[bus.id]
+            const complete = a?.driver && a?.conductor
+            return (
+              <div id={`bus-${bus.id}`} key={bus.id} className="stagger card overflow-hidden" style={{ '--i': Math.min(i, 8) }}>
+                <div className="flex items-center gap-3 p-4">
+                  <BusBadge id={bus.busNumber} />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-[15px] font-semibold text-gray-900">{bus.route}</h3>
+                    <p className="text-[13px] text-gray-500">{bus.type} · {bus.capacity} seats</p>
                   </div>
-                  <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                    {bus.status}
-                  </span>
+                  <Pill tone={complete ? 'green' : 'gray'} dot={complete}>{complete ? 'Assigned' : 'Open'}</Pill>
                 </div>
-                <div className="mt-4 space-y-2 text-sm text-gray-600">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>Type: {bus.type}</div>
-                    <div>Capacity: {bus.capacity}</div>
-                  </div>
+
+                <div className="space-y-3 border-t border-gray-100 bg-gray-50/50 p-4">
                   <div>
-                    <div className="font-medium">Timings:</div>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {bus.timings.map((time, index) => (
-                        <span key={index} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">
-                          {time}
-                        </span>
-                      ))}
-                    </div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                      <User className="h-3.5 w-3.5" /> Driver
+                    </label>
+                    <select
+                      className="input bg-white ring-1 ring-black/5"
+                      value={a?.driver?.id || ''}
+                      onChange={(e) => handleManualAssignment(bus.id, 'driver', e.target.value)}
+                    >
+                      <option value="">Select a driver</option>
+                      {availableDrivers
+                        .filter(driver => driver.preferredShifts.includes(activeTab))
+                        .map(driver => (
+                          <option key={driver.id} value={driver.id}>
+                            {driver.name} (★{driver.rating})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                      <Ticket className="h-3.5 w-3.5" /> Conductor
+                    </label>
+                    <select
+                      className="input bg-white ring-1 ring-black/5"
+                      value={a?.conductor?.id || ''}
+                      onChange={(e) => handleManualAssignment(bus.id, 'conductor', e.target.value)}
+                    >
+                      <option value="">Select a conductor</option>
+                      {availableConductors
+                        .filter(conductor => conductor.preferredShifts.includes(activeTab))
+                        .map(conductor => (
+                          <option key={conductor.id} value={conductor.id}>
+                            {conductor.name} ({conductor.experience}y exp)
+                          </option>
+                        ))}
+                    </select>
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-4 p-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Driver</label>
-                  <select
-                    className="w-full rounded-lg border border-gray-200 p-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 overflow-y-auto max-h-48"
-                    value={assignments[bus.id]?.driver?.id || ''}
-                    onChange={(e) => handleManualAssignment(bus.id, 'driver', e.target.value)}
-                  >
-                    <option value="">Select a driver</option>
-                    {availableDrivers
-                      .filter(driver => driver.preferredShifts.includes(activeTab))
-                      .map(driver => (
-                        <option key={driver.id} value={driver.id}>
-                          {driver.name} (★{driver.rating})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Conductor</label>
-                  <select
-                    className="w-full rounded-lg border border-gray-200 p-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 overflow-y-auto max-h-48"
-                    value={assignments[bus.id]?.conductor?.id || ''}
-                    onChange={(e) => handleManualAssignment(bus.id, 'conductor', e.target.value)}
-                  >
-                    <option value="">Select a conductor</option>
-                    {availableConductors
-                      .filter(conductor => conductor.preferredShifts.includes(activeTab))
-                      .map(conductor => (
-                        <option key={conductor.id} value={conductor.id}>
-                          {conductor.name} ({conductor.experience}y exp)
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                {assignments[bus.id] && (
-                  <div className="mt-4 rounded-lg bg-indigo-50 p-3">
-                    <div className="grid gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-indigo-600" />
-                        <span className="font-medium">Assigned Driver:</span>
-                        <span>{assignments[bus.id].driver?.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-indigo-600" />
-                        <span className="font-medium">Assigned Conductor:</span>
-                        <span>{assignments[bus.id].conductor?.name}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
+      </div>
 
-        <div className="mt-8 flex justify-end">
-          <button
-            onClick={handleSaveAssignments}
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-2.5 text-white transition hover:bg-green-700"
-          >
-            <Save className="h-5 w-5" />
-            Save Assignments
+      {/* Save bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <div className="glass mx-auto flex max-w-xl items-center gap-3 rounded-[24px] p-2.5 pl-5 shadow-ios-float ring-1 ring-black/5">
+          <div className="flex-1">
+            <p className="text-[15px] font-bold tabular text-gray-900">{assignedCount} / {activeBuses.length}</p>
+            <p className="text-xs text-gray-500">buses staffed</p>
+          </div>
+          <button onClick={handleSaveAssignments} className="btn btn-primary btn-lg">
+            <Save className="h-5 w-5" /> Save
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

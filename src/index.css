@@ -5,28 +5,164 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-surface text-gray-900 antialiased;
+    overscroll-behavior-y: none;
+    letter-spacing: -0.01em;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+  button, a, [role='button'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, select, textarea {
+    font-size: 16px; /* prevents iOS zoom-on-focus */
+  }
+  ::selection {
+    @apply bg-primary-200;
   }
 }
 
 @layer components {
+  /* ---------- Buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-11 select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-[15px] font-semibold
+      transition-all duration-200 ease-ios
+      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/25
+      active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
   }
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700;
+    @apply bg-primary-600 text-white shadow-sm shadow-primary-600/20 hover:bg-primary-700
+      disabled:bg-primary-300 disabled:opacity-100 disabled:shadow-none;
   }
   .btn-secondary {
-    @apply bg-secondary-600 text-white hover:bg-secondary-700;
+    @apply bg-secondary-600 text-white shadow-sm shadow-secondary-600/20 hover:bg-secondary-700;
+  }
+  .btn-tinted {
+    @apply bg-primary-50 text-primary-700 hover:bg-primary-100;
   }
   .btn-outline {
-    @apply border border-gray-300 bg-white hover:bg-gray-100;
+    @apply bg-white text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-50;
   }
+  .btn-ghost {
+    @apply bg-transparent text-primary-600 hover:bg-primary-50;
+  }
+  .btn-danger {
+    @apply bg-red-500 text-white shadow-sm shadow-red-500/20 hover:bg-red-600;
+  }
+  .btn-sm {
+    @apply h-9 rounded-lg px-4 text-sm;
+  }
+  .btn-lg {
+    @apply h-[52px] rounded-2xl px-6 text-base;
+  }
+  .btn-block {
+    @apply w-full;
+  }
+
+  /* Round icon-only button */
+  .icon-btn {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition-all duration-200 ease-ios
+      hover:bg-black/5 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/25;
+  }
+  .icon-btn-glass {
+    @apply icon-btn bg-white/80 shadow-ios-float backdrop-blur-xl hover:bg-white;
+  }
+
+  /* ---------- Surfaces ---------- */
   .card {
-    @apply rounded-lg border border-gray-200 bg-white shadow-sm;
+    @apply rounded-2xl bg-white shadow-ios ring-1 ring-black/[0.03];
   }
+  .glass {
+    @apply bg-white/75 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  /* iOS grouped list */
+  .list-group {
+    @apply overflow-hidden rounded-2xl bg-white shadow-ios ring-1 ring-black/[0.03];
+  }
+  .list-group > * + * {
+    @apply relative;
+  }
+  .list-group > * + *::before {
+    content: '';
+    @apply absolute left-4 right-0 top-0 h-px bg-gray-100;
+  }
+  .list-row {
+    @apply flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150;
+  }
+  button.list-row, a.list-row, .list-row-action {
+    @apply cursor-pointer active:bg-gray-50;
+  }
+  .section-label {
+    @apply mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-gray-500;
+  }
+
+  /* Colored rounded-square icon (as in iOS Settings) */
+  .icon-tile {
+    @apply flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-white;
+  }
+
+  /* ---------- Form controls ---------- */
   .input {
-    @apply rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500;
+    @apply h-11 w-full rounded-xl border border-transparent bg-gray-100/80 px-3.5 text-[15px] text-gray-900 placeholder:text-gray-400
+      transition-all duration-200 ease-ios
+      focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-500/15
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  select.input {
+    @apply appearance-none bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 12px center;
+  }
+  .input-error {
+    @apply border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-red-500/15;
+  }
+
+  /* ---------- Chips / pills ---------- */
+  .chip {
+    @apply inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 text-sm font-medium text-gray-700
+      shadow-ios ring-1 ring-black/[0.03] transition-all duration-200 ease-ios active:scale-95;
+  }
+  .chip-active {
+    @apply bg-primary-600 text-white ring-primary-600;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* ---------- Skeleton ---------- */
+  .skeleton {
+    @apply animate-shimmer rounded-xl;
+    background: linear-gradient(90deg, #eceef2 25%, #f6f7f9 50%, #eceef2 75%);
+    background-size: 200% 100%;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pb-tabbar { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  .bottom-tabbar { bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -1,8 +1,73 @@
 import { useState } from 'react'
-import { Bell, CheckCircle, AlertTriangle, Info, Clock, X, ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Bell, CheckCircle, AlertTriangle, Info, Trash2, BellOff } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PageHeader, Segmented, EmptyState } from '../components/ui'
+
+const toneFor = (type) => {
+  switch (type) {
+    case 'success':
+      return { icon: CheckCircle, tint: 'bg-emerald-500' }
+    case 'alert':
+      return { icon: AlertTriangle, tint: 'bg-amber-500' }
+    case 'info':
+    default:
+      return { icon: Info, tint: 'bg-primary-500' }
+  }
+}
+
+// One notification row: tap to mark read, swipe left (or tap the bin) to delete
+const NotificationRow = ({ notification, onRead, onDelete }) => {
+  const { icon: Icon, tint } = toneFor(notification.type)
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.25 } }}
+      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+      className="relative overflow-hidden rounded-2xl"
+    >
+      {/* Revealed delete action */}
+      <div className="absolute inset-0 flex items-center justify-end bg-red-500 pr-6 text-white">
+        <Trash2 className="h-5 w-5" />
+      </div>
+      <motion.div
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.5, right: 0 }}
+        onDragEnd={(_, info) => (info.offset.x < -90 || info.velocity.x < -500) && onDelete(notification.id)}
+        className="relative flex cursor-pointer items-start gap-3 bg-white p-4 shadow-ios ring-1 ring-black/[0.03]"
+        onClick={() => !notification.isRead && onRead(notification.id)}
+      >
+        <span className={`icon-tile h-10 w-10 rounded-xl ${tint}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className={`text-[15px] leading-snug ${notification.isRead ? 'font-medium text-gray-700' : 'font-semibold text-gray-900'}`}>
+              {notification.title}
+            </h3>
+            {!notification.isRead && <span className="mt-1.5 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-primary-500" />}
+          </div>
+          <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-gray-500">{notification.message}</p>
+          <p className="mt-1.5 text-xs text-gray-400">{notification.time}</p>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(notification.id) }}
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          className="icon-btn -mr-2 -mt-1 hidden h-8 w-8 text-gray-300 hover:text-red-500 sm:inline-flex"
+          aria-label="Delete notification"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </motion.div>
+    </motion.div>
+  )
+}
 
 const Notifications = () => {
+  const [filter, setFilter] = useState('all')
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -47,7 +112,7 @@ const Notifications = () => {
   ])
 
   const markAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
+    setNotifications(notifications.map(notification =>
       notification.id === id ? { ...notification, isRead: true } : notification
     ))
   }
@@ -60,132 +125,60 @@ const Notifications = () => {
     setNotifications(notifications.map(notification => ({ ...notification, isRead: true })))
   }
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-500" />
-      case 'alert':
-        return <AlertTriangle className="h-6 w-6 text-yellow-500" />
-      case 'info':
-      default:
-        return <Info className="h-6 w-6 text-blue-500" />
-    }
-  }
-
-  const getNotificationBgColor = (type, isRead) => {
-    if (isRead) return 'bg-white'
-    
-    switch (type) {
-      case 'success':
-        return 'bg-green-50'
-      case 'alert':
-        return 'bg-yellow-50'
-      case 'info':
-      default:
-        return 'bg-blue-50'
-    }
-  }
-
   const unreadCount = notifications.filter(notification => !notification.isRead).length
-
-  const navigate = useNavigate()
+  const visible = filter === 'unread' ? notifications.filter(n => !n.isRead) : notifications
 
   return (
-    <div className="animate-fade-in min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-3 md:px-6 transition-all duration-300 ease-in-out">
-        <div className="mb-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-1.5 rounded-full hover:bg-gray-200 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+    <>
+      <PageHeader
+        title="Alerts"
+        subtitle="Updates about your buses and routes"
+        action={
+          unreadCount > 0 && (
+            <button onClick={markAllAsRead} className="px-2 text-[15px] font-medium text-primary-600 transition active:opacity-50">
+              Read all
             </button>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
-              <p className="text-xs text-gray-600">
-                Stay updated with important information about your bus services.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+          )
+        }
+      />
 
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <div className="flex items-center space-x-2">
-            <Bell className="h-4 w-4 text-primary-600" />
-            <h2 className="text-base font-semibold text-gray-900">Your Notifications</h2>
-            {unreadCount > 0 && (
-              <span className="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-800">
-                {unreadCount} new
-              </span>
-            )}
-          </div>
-          
-          {unreadCount > 0 && (
-            <button 
-              onClick={markAllAsRead}
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
-            >
-              Mark all as read
-            </button>
-          )}
-        </div>
+      <div className="mx-auto max-w-2xl px-4">
+        <Segmented
+          id="notif-filter"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'All' },
+            { value: 'unread', label: 'Unread', badge: unreadCount },
+          ]}
+          className="mb-4"
+        />
 
-        {notifications.length > 0 ? (
-          <div className="divide-y divide-gray-200">
-            {notifications.map((notification) => (
-              <div 
-                key={notification.id} 
-                className={`flex items-start p-3 transform transition-all duration-300 ease-in-out hover:bg-gray-50 ${getNotificationBgColor(notification.type, notification.isRead)}`}
-              >
-                <div className="mr-4 mt-1">
-                  {getNotificationIcon(notification.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">{notification.title}</h3>
-                      <p className="mt-0.5 text-xs text-gray-600 line-clamp-2">{notification.message}</p>
-                      <div className="mt-1.5 flex items-center text-xs text-gray-500">
-                        <Clock className="mr-1 h-3 w-3" />
-                        <span>{notification.time}</span>
-                      </div>
-                    </div>
-                    <div className="ml-4 flex items-center space-x-2">
-                      {!notification.isRead && (
-                        <button 
-                          onClick={() => markAsRead(notification.id)}
-                          className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-                          aria-label="Mark as read"
-                        >
-                          <CheckCircle className="h-5 w-5" />
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => deleteNotification(notification.id)}
-                        className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-                        aria-label="Delete notification"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {visible.length > 0 ? (
+          <div className="space-y-2.5">
+            <AnimatePresence initial={false}>
+              {visible.map((notification) => (
+                <NotificationRow
+                  key={notification.id}
+                  notification={notification}
+                  onRead={markAsRead}
+                  onDelete={deleteNotification}
+                />
+              ))}
+            </AnimatePresence>
+            <p className="pt-2 text-center text-xs text-gray-400 sm:hidden">Swipe left to delete</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Bell className="h-10 w-10 text-gray-300" />
-            <h3 className="mt-3 text-base font-medium text-gray-900">No notifications</h3>
-            <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
+          <div className="card">
+            <EmptyState
+              icon={filter === 'unread' ? Bell : BellOff}
+              title={filter === 'unread' ? 'All caught up' : 'No notifications'}
+              message="You’re all caught up! Check back later for updates."
+            />
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 

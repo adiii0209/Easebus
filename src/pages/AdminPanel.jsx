@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Bus, MapPin, Calendar, Users, ChevronRight, Settings, LogOut, Plus, Edit, Trash2, Search, Clock, DollarSign, BarChart2, X, Clipboard, UserCheck, Route } from 'lucide-react'
+import { User, Bus, MapPin, Calendar, Users, ChevronRight, Settings, LogOut, Plus, Edit, Search, Clock, DollarSign, BarChart2, Clipboard, UserCheck, Route, Star } from 'lucide-react'
 import busData from '../../buses.js'
 import adminProfileImage from '../assets/Easee.jpg'
 import busService from '../services/BusService' // Import BusService for revenue data
+import { PageHeader, Sheet, Segmented, Pill, BusBadge, Avatar, EmptyState, Reveal } from '../components/ui'
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -52,17 +53,17 @@ const AdminPanel = () => {
       dailyRevenue: revenueData.daily,
       monthlyRevenue: revenueData.monthly
     }));
-    
+
     // Get current date for daily revenue
     const today = new Date().toISOString().split('T')[0];
     const currentMonth = new Date().getMonth() + 1; // 1-indexed month
     const currentYear = new Date().getFullYear();
-    
+
     // Try to get real revenue data if available
     try {
       const dailyRev = busService.getDailyRevenue(today);
       const monthlyRev = busService.getMonthlyRevenue(currentYear, currentMonth);
-      
+
       if (dailyRev > 0 || monthlyRev > 0) {
         setStats(prevStats => ({
           ...prevStats,
@@ -85,7 +86,7 @@ const AdminPanel = () => {
     currentRoute: bus.route,
     driver: `Driver ${index + 1}`,
     lastMaintenance: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    totalRevenue: bus.busId.startsWith('AC-') ? 
+    totalRevenue: bus.busId.startsWith('AC-') ?
       Math.floor(Math.random() * 15000) + 8000 : // Higher revenue for AC buses
       Math.floor(Math.random() * 8000) + 4000 // Regular bus revenue
   })))
@@ -149,7 +150,7 @@ const AdminPanel = () => {
   // Filter function for search
   const filterItems = (items, query) => {
     if (!query) return items
-    
+
     return items.filter(item => {
       // Different filtering logic based on item type
       if ('busNumber' in item) { // Bus
@@ -195,618 +196,297 @@ const AdminPanel = () => {
   // Function to view revenue details for a specific bus with mock data
   const viewBusRevenue = (bus) => {
     setSelectedBus(bus);
-    
+
     // Generate mock revenue data for the last 7 days
     const mockRevenueData = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       // Generate higher revenue for AC buses and peak days (Mon-Fri)
       const isAC = bus.model.includes('AC');
       const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
       const isPeakDay = dayOfWeek > 0 && dayOfWeek < 6;
-      
+
       const baseAmount = isAC ? 12000 : 8000;
       const peakMultiplier = isPeakDay ? 1.3 : 1;
       const randomVariation = 0.8 + Math.random() * 0.4; // 80-120% of base
-      
+
       const amount = Math.floor(baseAmount * peakMultiplier * randomVariation);
-      
+
       mockRevenueData.push({
         date: dateStr,
         amount: amount
       });
     }
-    
+
     setRevenueByDate(mockRevenueData);
     setShowRevenueModal(true);
   };
 
-  // Render stat card
-  const StatCard = ({ title, value, icon, className }) => (
-    <div className={`backdrop-blur-md bg-white/30 border border-white/40 shadow-xl rounded-2xl p-4 transition-all duration-300 hover:shadow-2xl hover:bg-white/40 ${className || ''}`}>
-      <div className="flex items-center">
-        <div className={`mr-4 rounded-xl p-3 backdrop-blur-sm ${title === 'Today\'s Revenue' ? 'bg-green-100/80 text-green-600' : title === 'Monthly Revenue' ? 'bg-amber-100/80 text-amber-600' : 'bg-primary-100/80 text-primary-600'} transition-colors`}>
-          {icon}
-        </div>
-        <div>
-          <p className={`text-sm font-medium ${title === 'Today\'s Revenue' ? 'text-green-600' : title === 'Monthly Revenue' ? 'text-amber-600' : 'text-gray-600'}`}>{title}</p>
-          <h3 className={`text-2xl font-bold ${title === 'Today\'s Revenue' ? 'text-green-800' : title === 'Monthly Revenue' ? 'text-amber-800' : 'text-gray-800'}`}>{value}</h3>
-        </div>
-      </div>
+  const maxRevenue = Math.max(1, ...revenueByDate.map((r) => r.amount))
+
+  const dailyTasks = [
+    { icon: UserCheck, title: 'Assign driver & conductor', text: 'Randomly or manually assign staff to buses', tint: 'bg-primary-500', to: '/assignment' },
+    { icon: Route, title: 'Manage buses & routes', text: 'Update bus assignments and route schedules', tint: 'bg-secondary-500', to: '/management' },
+    { icon: Clock, title: 'Schedule maintenance', text: 'Plan and track bus maintenance tasks', tint: 'bg-amber-500' },
+    { icon: DollarSign, title: 'Finance management', text: 'Track payments, revenues, and expenses', tint: 'bg-emerald-500', to: '/finance' },
+  ]
+
+  const activity = [
+    { icon: Bus, tint: 'bg-primary-500', title: 'AC-2 Bus maintenance completed at Howrah Depot', time: '2 hours ago' },
+    { icon: User, tint: 'bg-emerald-500', title: 'New driver Rajesh Kumar assigned to Salt Lake route', time: '5 hours ago' },
+    { icon: MapPin, tint: 'bg-amber-500', title: 'E-1 Route schedule updated for Sealdah Station', time: 'Yesterday' },
+  ]
+
+  const systemAlerts = [
+    { icon: Bus, tint: 'bg-red-500', title: 'S-2 Bus requires immediate maintenance at Gariahat Depot', time: 'High priority' },
+    { icon: MapPin, tint: 'bg-amber-500', title: 'AC-1 Route experiencing delays near Park Street', time: 'Medium priority' },
+    { icon: Users, tint: 'bg-primary-500', title: 'High passenger volume on E-1 Route at Esplanade', time: 'Low priority' },
+  ]
+
+  const StatCard = ({ title, value, icon: Icon, tint }) => (
+    <div className="card p-4">
+      <span className={`icon-tile h-9 w-9 rounded-xl ${tint}`}><Icon className="h-[18px] w-[18px]" /></span>
+      <p className="mt-3 text-2xl font-bold tabular tracking-tight text-gray-900">{value}</p>
+      <p className="text-[13px] text-gray-500">{title}</p>
     </div>
   )
 
+  const FeedList = ({ items }) => (
+    <div className="list-group">
+      {items.map(({ icon: Icon, tint, title, time }) => (
+        <div key={title} className="list-row items-start py-3.5">
+          <span className={`icon-tile ${tint}`}><Icon className="h-4 w-4" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-medium leading-snug text-gray-900">{title}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{time}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  const addLabel = activeTab === 'buses' ? 'Bus' : activeTab === 'drivers' ? 'Driver' : 'Route'
+
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
-      {/* Daily Tasks Modal */}
-      {showDailyTasksModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500/30 backdrop-blur-sm"></div>
-            </div>
-            <div className="inline-block transform overflow-hidden rounded-2xl bg-white/80 backdrop-blur-md border border-white/20 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
-              <div className="bg-gradient-to-br from-white/60 to-white/30 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 w-full text-center sm:mt-0 sm:text-left">
-                    <h3 className="text-xl font-semibold leading-6 text-gray-900">Daily Tasks</h3>
-                    <div className="mt-6 space-y-4">
-                      <button 
-                        onClick={() => {
-                          setShowDailyTasksModal(false);
-                          navigate('/assignment');
-                        }} 
-                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group"
-                      >
-                        <div className="flex items-center">
-                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
-                            <UserCheck className="h-5 w-5 text-primary-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Assign Driver & Conductor</p>
-                            <p className="text-sm text-gray-500">Randomly or manually assign staff to buses</p>
-                          </div>
-                        </div>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setShowDailyTasksModal(false);
-                          navigate('/management');
-                        }}
-                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group"
-                      >
-                        <div className="flex items-center">
-                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
-                            <Route className="h-5 w-5 text-primary-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Manage Buses & Routes</p>
-                            <p className="text-sm text-gray-500">Update bus assignments and route schedules</p>
-                          </div>
-                        </div>
-                      </button>
-                      <button className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group">
-                        <div className="flex items-center">
-                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
-                            <Clock className="h-5 w-5 text-primary-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Schedule Maintenance</p>
-                            <p className="text-sm text-gray-500">Plan and track bus maintenance tasks</p>
-                          </div>
-                        </div>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setShowDailyTasksModal(false);
-                          navigate('/finance');
-                        }}
-                        className="w-full rounded-xl border border-white/40 bg-white/50 backdrop-blur-sm px-4 py-3 text-left transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none group">
-                        <div className="flex items-center">
-                          <div className="mr-3 rounded-lg bg-primary-100/80 p-2 group-hover:bg-primary-200/80 transition-colors">
-                            <DollarSign className="h-5 w-5 text-primary-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Finance Management</p>
-                            <p className="text-sm text-gray-500">Track payments, revenues, and expenses</p>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/50 backdrop-blur-sm px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  className="mt-3 inline-flex w-full justify-center rounded-xl border border-white/40 bg-white/50 px-4 py-2 text-base font-medium text-gray-700 shadow-sm transition-all hover:bg-white/70 hover:shadow-lg focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => setShowDailyTasksModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+    <>
+      <PageHeader
+        title="Admin"
+        subtitle="Kolkata Transport"
+        back
+        backTo="/"
+        action={
+          <button onClick={() => setShowDailyTasksModal(true)} className="flex h-9 items-center gap-1.5 rounded-full bg-primary-600 px-3.5 text-sm font-semibold text-white transition active:scale-95">
+            <Clipboard className="h-4 w-4" /> Tasks
+          </button>
+        }
+      />
+
+      <div className="mx-auto max-w-5xl space-y-5 px-4 pb-10">
+        {/* Profile strip */}
+        <div className="card flex items-center gap-3 p-3.5">
+          <img src={admin.profileImage} alt={`${admin.firstName} ${admin.lastName}`} className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-ios" />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-[16px] font-semibold text-gray-900">{admin.firstName} {admin.lastName}</h2>
+            <p className="truncate text-[13px] text-gray-500">{admin.role}</p>
           </div>
-        </div>
-      )}
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kolkata Transport Admin</h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Manage Kolkata's public transport system, routes, and view statistics
-          </p>
-        </div>
-        <button
-          onClick={() => setShowDailyTasksModal(true)}
-          className="btn btn-primary flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-sm"
-        >
-          <Clipboard className="h-5 w-5" />
-          Daily Tasks
-        </button>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-4">
-        {/* Admin Profile Card */}
-        <div className="md:col-span-1">
-          <div className="backdrop-blur-md bg-white/30 border border-white/40 shadow-xl rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:bg-white/40">
-            <div className="flex flex-col items-center text-center">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-400 to-primary-600 rounded-full blur opacity-30"></div>
-                <img 
-                  src={admin.profileImage} 
-                  alt={`${admin.firstName} ${admin.lastName}`} 
-                  className="relative h-24 w-24 rounded-full object-cover ring-2 ring-white/60 shadow-lg"
-                />
-              </div>
-              <h2 className="mt-4 text-xl font-semibold text-gray-800">{admin.firstName} {admin.lastName}</h2>
-              <p className="text-gray-600">{admin.email}</p>
-              <p className="text-sm text-gray-500/80 backdrop-blur-sm rounded-full px-3 py-1 bg-gray-100/30">{admin.role}</p>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <button 
-                onClick={() => setActiveTab('dashboard')} 
-                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
-              >
-                <div className="flex items-center">
-                  <User className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Dashboard</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </button>
-              <button 
-                onClick={() => setActiveTab('buses')} 
-                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'buses' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
-              >
-                <div className="flex items-center">
-                  <Bus className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Buses</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </button>
-              <button 
-                onClick={() => setActiveTab('drivers')} 
-                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'drivers' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
-              >
-                <div className="flex items-center">
-                  <User className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Drivers</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </button>
-              <button 
-                onClick={() => setActiveTab('routes')} 
-                className={`flex w-full items-center justify-between p-3 text-left rounded-xl backdrop-blur-sm transition-all duration-300 ${activeTab === 'routes' ? 'bg-primary-100/50 text-primary-600 shadow-lg' : 'hover:bg-white/50 hover:shadow-md'}`}
-              >
-                <div className="flex items-center">
-                  <MapPin className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Routes</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </button>
-              <Link to="/settings" className="flex items-center justify-between p-3 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/50 hover:shadow-md">
-                <div className="flex items-center">
-                  <Settings className="mr-3 h-5 w-5 text-gray-400" />
-                  <span>Settings</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </Link>
-              <Link to="/" className="flex items-center justify-between p-3 rounded-xl backdrop-blur-sm transition-all duration-300 text-red-600 hover:bg-red-50/50 hover:shadow-md">
-                <div className="flex items-center">
-                  <LogOut className="mr-3 h-5 w-5" />
-                  <span>Logout</span>
-                </div>
-                <ChevronRight className="h-5 w-5" />
-              </Link>
-            </div>
-          </div>
+          <Link to="/settings" className="icon-btn" aria-label="Settings"><Settings className="h-5 w-5 text-gray-500" /></Link>
+          <Link to="/" className="icon-btn" aria-label="Log out"><LogOut className="h-5 w-5 text-red-500" /></Link>
         </div>
 
-        {/* Main Content */}
-        <div className="md:col-span-3">
+        <Segmented
+          id="admin-tabs"
+          value={activeTab}
+          onChange={(v) => { setActiveTab(v); setSearchQuery('') }}
+          options={[
+            { value: 'dashboard', label: 'Overview' },
+            { value: 'buses', label: 'Buses' },
+            { value: 'drivers', label: 'Drivers' },
+            { value: 'routes', label: 'Routes' },
+          ]}
+        />
+
+        <div key={activeTab} className="animate-slide-up space-y-5">
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">System Overview</h2>
-              
-              <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Total Buses" value={stats.totalBuses} icon={<Bus className="h-6 w-6" />} />
-                <StatCard title="Active Buses" value={stats.activeBuses} icon={<Bus className="h-6 w-6" />} />
-                <StatCard title="Total Drivers" value={stats.totalDrivers} icon={<User className="h-6 w-6" />} />
-                <StatCard title="Active Drivers" value={stats.activeDrivers} icon={<User className="h-6 w-6" />} />
-                <StatCard title="Total Routes" value={stats.totalRoutes} icon={<MapPin className="h-6 w-6" />} />
-                <StatCard title="Active Routes" value={stats.activeRoutes} icon={<MapPin className="h-6 w-6" />} />
-                <StatCard title="Total Passengers" value={stats.totalPassengers} icon={<Users className="h-6 w-6" />} />
-                <StatCard title="Daily Bookings" value={stats.dailyBookings} icon={<Calendar className="h-6 w-6" />} />
-                <StatCard 
-                  title="Today's Revenue" 
-                  value={`₹${stats.dailyRevenue.toLocaleString()}`} 
-                  icon={<DollarSign className="h-6 w-6" />} 
-                  className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg"
-                />
-                <StatCard 
-                  title="Monthly Revenue" 
-                  value={`₹${stats.monthlyRevenue.toLocaleString()}`} 
-                  icon={<DollarSign className="h-6 w-6" />} 
-                  className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 shadow-lg"
-                />
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="card p-4">
-                  <h3 className="mb-4 text-lg font-medium text-gray-900">Recent Activity</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-blue-100 p-2 text-blue-600">
-                        <Bus className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">AC-2 Bus maintenance completed at Howrah Depot</p>
-                        <p className="text-sm text-gray-500">2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-green-100 p-2 text-green-600">
-                        <User className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">New driver Rajesh Kumar assigned to Salt Lake route</p>
-                        <p className="text-sm text-gray-500">5 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-yellow-100 p-2 text-yellow-600">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">E-1 Route schedule updated for Sealdah Station</p>
-                        <p className="text-sm text-gray-500">Yesterday</p>
-                      </div>
-                    </div>
-                  </div>
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl bg-emerald-600 p-5 text-white shadow-ios">
+                  <p className="text-[13px] font-medium text-white/75">Today’s revenue</p>
+                  <p className="mt-1 text-4xl font-bold tabular tracking-tight">₹{stats.dailyRevenue.toLocaleString()}</p>
                 </div>
-
-                <div className="card p-4">
-                  <h3 className="mb-4 text-lg font-medium text-gray-900">System Alerts</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-red-100 p-2 text-red-600">
-                        <Bus className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">S-2 Bus requires immediate maintenance at Gariahat Depot</p>
-                        <p className="text-sm text-gray-500">High priority</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-yellow-100 p-2 text-yellow-600">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">AC-1 Route experiencing delays near Park Street</p>
-                        <p className="text-sm text-gray-500">Medium priority</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="mr-3 rounded-full bg-blue-100 p-2 text-blue-600">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">High passenger volume on E-1 Route at Esplanade</p>
-                        <p className="text-sm text-gray-500">Low priority</p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="rounded-3xl bg-amber-500 p-5 text-white shadow-ios">
+                  <p className="text-[13px] font-medium text-white/80">Monthly revenue</p>
+                  <p className="mt-1 text-4xl font-bold tabular tracking-tight">₹{stats.monthlyRevenue.toLocaleString()}</p>
                 </div>
               </div>
-            </div>
+
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <StatCard title="Total buses" value={stats.totalBuses} icon={Bus} tint="bg-primary-500" />
+                <StatCard title="Active buses" value={stats.activeBuses} icon={Bus} tint="bg-emerald-500" />
+                <StatCard title="Total drivers" value={stats.totalDrivers} icon={User} tint="bg-secondary-500" />
+                <StatCard title="Active drivers" value={stats.activeDrivers} icon={User} tint="bg-emerald-500" />
+                <StatCard title="Total routes" value={stats.totalRoutes} icon={MapPin} tint="bg-primary-500" />
+                <StatCard title="Active routes" value={stats.activeRoutes} icon={MapPin} tint="bg-emerald-500" />
+                <StatCard title="Passengers" value={stats.totalPassengers.toLocaleString()} icon={Users} tint="bg-amber-500" />
+                <StatCard title="Daily bookings" value={stats.dailyBookings} icon={Calendar} tint="bg-rose-500" />
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <p className="section-label">Recent activity</p>
+                  <FeedList items={activity} />
+                </div>
+                <div>
+                  <p className="section-label">System alerts</p>
+                  <FeedList items={systemAlerts} />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Buses, Drivers, Routes Tabs */}
           {(activeTab === 'buses' || activeTab === 'drivers' || activeTab === 'routes') && (
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {activeTab === 'buses' && 'Manage Buses'}
-                  {activeTab === 'drivers' && 'Manage Drivers'}
-                  {activeTab === 'routes' && 'Manage Routes'}
-                </h2>
-                <button className="btn btn-primary flex items-center">
-                  <Plus className="mr-1 h-4 w-4" />
-                  <span>Add {activeTab === 'buses' ? 'Bus' : activeTab === 'drivers' ? 'Driver' : 'Route'}</span>
-                </button>
-              </div>
-
-              {/* Search Bar */}
-              <div className="mb-4">
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
+            <>
+              <div className="flex gap-2.5">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
-                    placeholder={`Search ${activeTab}...`}
+                    className="input bg-white pl-10 shadow-ios ring-1 ring-black/[0.03]"
+                    placeholder={`Search ${activeTab}`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+                <button onClick={() => navigate('/management')} className="btn btn-primary" aria-label={`Add ${addLabel}`}>
+                  <Plus className="h-5 w-5" strokeWidth={2.5} />
+                  <span className="hidden sm:inline">Add {addLabel}</span>
+                </button>
               </div>
 
-              {/* Table */}
-              <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                {activeTab === 'buses' && (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Bus Number</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Model</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Current Route</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Driver</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Total Revenue</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredItems.map((bus) => (
-                        <tr key={bus.id}>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <div className="text-sm font-medium text-gray-900">{bus.busNumber}</div>
-                            <div className="text-sm text-gray-500">Capacity: {bus.capacity}</div>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{bus.model}</td>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${bus.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {bus.status}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{bus.currentRoute}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{bus.driver}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{`₹${bus.totalRevenue?.toLocaleString() || 'N/A'}`}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={() => viewBusRevenue(bus)}
-                                className="text-green-600 hover:text-green-900"
-                                title="View Revenue Details"
-                              >
-                                <BarChart2 className="h-4 w-4" />
-                              </button>
-                              <button className="text-primary-600 hover:text-primary-900">
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+              {filteredItems.length === 0 ? (
+                <div className="card"><EmptyState icon={Search} title="No matches" message="Try a different search term." /></div>
+              ) : (
+                <div className="list-group">
+                  {activeTab === 'buses' && filteredItems.map((bus, i) => (
+                    <Reveal key={bus.id} index={i}>
+                      <div className="list-row py-3.5">
+                        <BusBadge id={bus.busNumber} />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-[15px] font-semibold text-gray-900">{bus.currentRoute}</h3>
+                          <p className="mt-0.5 text-[13px] text-gray-500">{bus.model} · {bus.capacity} seats</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <Pill tone={bus.status === 'Active' ? 'green' : 'amber'}>{bus.status}</Pill>
+                            <span className="truncate text-xs text-gray-400">{bus.driver} · <span className="font-semibold text-emerald-600">₹{bus.totalRevenue?.toLocaleString() || 'N/A'}</span></span>
+                          </div>
+                        </div>
+                        <button onClick={() => viewBusRevenue(bus)} className="icon-btn text-emerald-600" title="View revenue details" aria-label="View revenue details"><BarChart2 className="h-5 w-5" /></button>
+                        <button onClick={() => navigate('/management')} className="icon-btn text-primary-600" aria-label="Edit bus"><Edit className="h-5 w-5" /></button>
+                      </div>
+                    </Reveal>
+                  ))}
 
-                {activeTab === 'drivers' && (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">ID</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Current Route</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rating</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredItems.map((driver) => (
-                        <tr key={driver.id}>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <div className="text-sm font-medium text-gray-900">{driver.name}</div>
-                            <div className="text-sm text-gray-500">{driver.phone}</div>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <div className="text-sm text-gray-900">{driver.employeeId}</div>
-                            <div className="text-sm text-gray-500">{driver.licenseNumber}</div>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${driver.status === 'On Duty' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                              {driver.status}
+                  {activeTab === 'drivers' && filteredItems.map((driver, i) => (
+                    <Reveal key={driver.id} index={i}>
+                      <div className="list-row py-3.5">
+                        <Avatar name={driver.name} size="h-11 w-11" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-[15px] font-semibold text-gray-900">{driver.name}</h3>
+                          <p className="mt-0.5 truncate text-[13px] text-gray-500">{driver.currentRoute}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <Pill tone={driver.status === 'On Duty' ? 'green' : 'gray'}>{driver.status}</Pill>
+                            <span className="flex items-center gap-1 truncate text-xs text-gray-400">
+                              {driver.employeeId} · <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {driver.rating}
                             </span>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{driver.currentRoute}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{driver.rating}/5</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={() => viewBusRevenue(bus)}
-                                className="text-green-600 hover:text-green-900"
-                                title="View Revenue Details"
-                              >
-                                <BarChart2 className="h-4 w-4" />
-                              </button>
-                              <button className="text-primary-600 hover:text-primary-900">
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                          </div>
+                        </div>
+                      </div>
+                    </Reveal>
+                  ))}
 
-                {activeTab === 'routes' && (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Bus Number</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Route Name</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Stops</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Timings</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredItems.map((route) => (
-                        <tr key={route.id}>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <div className="text-sm font-medium text-gray-900">{route.routeNumber}</div>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <div className="text-sm text-gray-900">{route.routeName}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="max-h-20 overflow-y-auto text-sm text-gray-500">
-                              {route.stops.map((stop, index) => (
-                                <div key={index} className="mb-1">
-                                  {index === 0 ? '🚏 ' : index === route.stops.length - 1 ? '🏁 ' : '↓ '}{stop}
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center text-sm text-gray-500">
-                              <Clock className="mr-1 h-4 w-4" />
-                              <div className="max-h-20 overflow-y-auto">
-                                {route.timings.map((time, index) => (
-                                  <div key={index} className="mb-1">{time}</div>
-                                ))}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4">
-                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${route.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {route.status}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={() => viewBusRevenue(bus)}
-                                className="text-green-600 hover:text-green-900"
-                                title="View Revenue Details"
-                              >
-                                <BarChart2 className="h-4 w-4" />
-                              </button>
-                              <button className="text-primary-600 hover:text-primary-900">
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
+                  {activeTab === 'routes' && filteredItems.map((route, i) => (
+                    <Reveal key={route.id} index={i}>
+                      <div className="list-row py-3.5">
+                        <BusBadge id={route.routeNumber} />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-[15px] font-semibold text-gray-900">{route.routeName}</h3>
+                          <p className="mt-0.5 truncate text-[13px] text-gray-500">{route.startLocation} → {route.endLocation}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <Pill tone={route.status === 'Active' ? 'green' : 'red'}>{route.status}</Pill>
+                            <span className="truncate text-xs text-gray-400">{route.stops.length} stops · {route.timings.length} trips/day</span>
+                          </div>
+                        </div>
+                        <button onClick={() => navigate('/management')} className="icon-btn text-primary-600" aria-label="Edit route"><Edit className="h-5 w-5" /></button>
+                      </div>
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* Revenue Modal */}
-      {showRevenueModal && selectedBus && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="card w-full max-w-2xl p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Revenue Details: {selectedBus.busNumber}
-              </h2>
-              <button 
-                onClick={() => setShowRevenueModal(false)}
-                className="rounded-full p-1 hover:bg-gray-100"
-              >
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
+      {/* Daily Tasks */}
+      <Sheet isOpen={showDailyTasksModal} onClose={() => setShowDailyTasksModal(false)} title="Daily tasks">
+        <div className="list-group">
+          {dailyTasks.map(({ icon: Icon, title, text, tint, to }) => (
+            <button
+              key={title}
+              className="list-row py-3.5"
+              onClick={() => {
+                setShowDailyTasksModal(false)
+                if (to) navigate(to)
+              }}
+            >
+              <span className={`icon-tile h-10 w-10 rounded-xl ${tint}`}><Icon className="h-5 w-5" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-semibold text-gray-900">{title}</span>
+                <span className="block text-[13px] text-gray-500">{text}</span>
+              </span>
+              <ChevronRight className="h-5 w-5 text-gray-300" />
+            </button>
+          ))}
+        </div>
+      </Sheet>
+
+      {/* Revenue */}
+      <Sheet isOpen={showRevenueModal && !!selectedBus} onClose={() => setShowRevenueModal(false)} title={selectedBus ? `Revenue · ${selectedBus.busNumber}` : 'Revenue'} size="lg">
+        {selectedBus && (
+          <>
+            <div className="card mb-5 p-4">
+              <p className="text-[13px] text-gray-500">{selectedBus.model} · {selectedBus.currentRoute}</p>
+              <p className="mt-1 text-3xl font-bold tabular tracking-tight text-emerald-600">₹{selectedBus.totalRevenue?.toLocaleString() || '0'}</p>
+              <p className="text-xs text-gray-400">Total revenue</p>
             </div>
 
-            <div className="mb-4">
-              <p className="text-sm text-gray-600">Bus Model: {selectedBus.model}</p>
-              <p className="text-sm text-gray-600">Current Route: {selectedBus.currentRoute}</p>
-              <p className="text-sm text-gray-600">Total Revenue: <span className="font-medium text-green-600">₹{selectedBus.totalRevenue?.toLocaleString() || '0'}</span></p>
-            </div>
-
-            <h3 className="mb-2 text-lg font-medium text-gray-900">Revenue by Date</h3>
-            
+            <p className="section-label">Last 7 days</p>
             {revenueByDate.length > 0 ? (
-              <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {revenueByDate.map((entry, index) => (
-                      <tr key={index}>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                          {new Date(entry.date).toLocaleDateString('en-IN', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-green-600">
-                          ₹{entry.amount.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="list-group">
+                {revenueByDate.map((entry, index) => (
+                  <div key={index} className="list-row flex-col items-stretch gap-2 py-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-gray-700">
+                        {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </span>
+                      <span className="text-[14px] font-semibold tabular text-emerald-600">₹{entry.amount.toLocaleString()}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-700 ease-ios" style={{ width: `${(entry.amount / maxRevenue) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
-                <p className="text-gray-500">No revenue data available for this bus.</p>
-                <p className="mt-2 text-sm text-gray-400">Revenue data will appear here once trips are completed and fares are collected.</p>
-              </div>
+              <EmptyState icon={BarChart2} title="No revenue yet" message="Revenue will appear once trips are completed and fares are collected." />
             )}
-
-            <div className="mt-4 flex justify-end">
-              <button 
-                onClick={() => setShowRevenueModal(false)}
-                className="btn btn-secondary"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </>
+        )}
+      </Sheet>
+    </>
   )
 }
 

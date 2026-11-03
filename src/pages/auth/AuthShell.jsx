@@ -13,7 +13,7 @@ export const AuthShell = ({ title, subtitle, children, footer }) => (
         <Bus className="h-8 w-8" strokeWidth={2.25} />
       </Link>
       <div className="mb-6 animate-slide-up text-center text-white">
-        <h1 className="text-[28px] font-bold tracking-tight">{title}</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">{title}</h1>
         <p className="mt-1 text-[15px] text-white/75">{subtitle}</p>
       </div>
 

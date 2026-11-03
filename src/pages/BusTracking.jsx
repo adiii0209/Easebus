@@ -293,7 +293,7 @@ const BusTracking = () => {
           )}
         </AnimatePresence>
 
-        <div className="mt-4 grid gap-5 pb-4 lg:grid-cols-5">
+        <div className="mt-4 grid grid-cols-1 gap-5 pb-4 lg:grid-cols-5">
           {/* Map */}
           <div className="lg:order-2 lg:col-span-3">
             <div className="relative h-[320px] overflow-hidden rounded-[28px] shadow-ios-lg ring-1 ring-black/5 md:h-[420px] lg:sticky lg:top-16 lg:h-[560px]">

@@ -28,12 +28,16 @@
   ::selection {
     @apply bg-primary-200;
   }
+  /* Phones: scale every rem-based size down so the UI feels native, not oversized */
+  @media (max-width: 480px) {
+    html { font-size: 14px; }
+  }
 }
 
 @layer components {
   /* ---------- Buttons ---------- */
   .btn {
-    @apply inline-flex h-11 select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-[15px] font-semibold
+    @apply inline-flex h-[44px] select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-[15px] font-semibold
       transition-all duration-200 ease-ios
       focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/25
       active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
@@ -58,7 +62,7 @@
     @apply bg-red-500 text-white shadow-sm shadow-red-500/20 hover:bg-red-600;
   }
   .btn-sm {
-    @apply h-9 rounded-lg px-4 text-sm;
+    @apply h-[36px] rounded-lg px-4 text-sm;
   }
   .btn-lg {
     @apply h-[52px] rounded-2xl px-6 text-base;
@@ -69,7 +73,7 @@
 
   /* Round icon-only button */
   .icon-btn {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition-all duration-200 ease-ios
+    @apply inline-flex h-[40px] w-[40px] items-center justify-center rounded-full text-gray-700 transition-all duration-200 ease-ios
       hover:bg-black/5 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/25;
   }
   .icon-btn-glass {
@@ -112,7 +116,7 @@
 
   /* ---------- Form controls ---------- */
   .input {
-    @apply h-11 w-full rounded-xl border border-transparent bg-gray-100/80 px-3.5 text-[15px] text-gray-900 placeholder:text-gray-400
+    @apply h-[44px] w-full rounded-xl border border-transparent bg-gray-100/80 px-3.5 text-[15px] text-gray-900 placeholder:text-gray-400
       transition-all duration-200 ease-ios
       focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-500/15
       disabled:cursor-not-allowed disabled:opacity-50;
@@ -128,7 +132,7 @@
 
   /* ---------- Chips / pills ---------- */
   .chip {
-    @apply inline-flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 text-sm font-medium text-gray-700
+    @apply inline-flex h-[36px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 text-sm font-medium text-gray-700
       shadow-ios ring-1 ring-black/[0.03] transition-all duration-200 ease-ios active:scale-95;
   }
   .chip-active {

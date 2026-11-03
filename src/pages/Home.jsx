@@ -58,7 +58,7 @@ const Home = () => {
           <p className="animate-slide-up text-sm font-medium text-white/70">
             {user ? `Welcome back, ${user.name?.split(' ')[0] || 'traveller'}` : 'Welcome to'}
           </p>
-          <h1 className="animate-slide-up text-[56px] font-extrabold leading-none tracking-tight text-yellow-400" style={{ animationDelay: '60ms' }}>
+          <h1 className="animate-slide-up text-[44px] font-extrabold leading-none sm:text-[56px] tracking-tight text-yellow-400" style={{ animationDelay: '60ms' }}>
             EaseBus
           </h1>
           <p className="mt-2 animate-slide-up text-lg text-primary-100" style={{ animationDelay: '120ms' }}>

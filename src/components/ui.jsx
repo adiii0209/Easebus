@@ -55,7 +55,7 @@ export const PageHeader = ({ title, subtitle, back = false, backTo, action, clas
         </div>
       </div>
       <div className={`mx-auto max-w-5xl px-4 pb-3 pt-1 ${className}`}>
-        <h1 className="text-[34px] font-bold leading-tight tracking-tight text-gray-900">{title}</h1>
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight text-gray-900 sm:text-[34px]">{title}</h1>
         {subtitle && <p className="mt-1 text-[15px] text-gray-500">{subtitle}</p>}
       </div>
     </>
